@@ -174,9 +174,15 @@ def construct_name_mappings_df(df: DataFrame, is_synonym_filetype: bool) -> Data
 def write_name_mappings_to_json(df: DataFrame, output_filepath: str) -> None:
     output_filepath_path: Path = Path(output_filepath).parents[0]
     output_filepath_path.mkdir(parents=True, exist_ok=True)
+    # Coalesce to 1 file for sample demonstration
     df.coalesce(1).write.format("json").mode("overwrite").option(
         "schema", OUTPUT_SCHEMA
     ).save(output_filepath)
+
+    # Repartition to ballpark of 5 files for real data
+    # df.repartition(5).write.format("json").mode("overwrite").option(
+    #     "schema", OUTPUT_SCHEMA
+    # ).save(output_filepath)
 
 
 def write_process_metadata(df: DataFrame, output_filepath: Path) -> None:

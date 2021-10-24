@@ -18,21 +18,13 @@ OUTPUT_SCHEMA = StructType(
     ]
 )
 
-PROCESS_METADATA_SCHEMA = StructType(
-    [
-        StructField(
-            "file_types",
-            ArrayType(
-                StructType(
-                    [
-                        StructField("dataset_name", StringType(), False),
-                        StructField("initial_row_count", StringType(), False),
-                        StructField("end_row_count", StringType(), False),
-                    ]
-                ),
-                True,
-            ),
-            False,
-        ),
-    ]
-)
+# PROCESS_METADATA_SCHEMA = StructType(
+#     [
+#         StructField("total_count", IntegerType(), False),
+#         StructField("is_synonym_count", IntegerType(), False),
+#         StructField("is_not_synonym_count", IntegerType(), False),
+#         StructField("is_common_name_count", IntegerType(), False),
+#         StructField("is_pharmaceutical_name_count", IntegerType(), False),
+#         StructField("is_sci_cited_medicinal_name_count", IntegerType(), False),
+#     ]
+# )

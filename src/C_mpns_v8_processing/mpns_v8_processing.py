@@ -180,11 +180,17 @@ def write_process_metadata(output_filepath: Path) -> None:
     pass
 
 
-mpns_raw_filepath = "data/mpns/sample_mpns_v8/"
-mpns_processed_filepath = "data/processed/mpns/sample_mpns_v8/mpns_name_mappings/"
+# These are here for demonstration purposes
+sample_mpns_raw_filepath = "data/mpns/sample_mpns_v8/"
+sample_mpns_processed_filepath = (
+    "data/processed/mpns/sample_mpns_v8/mpns_name_mappings/"
+)
+
+# mpns_raw_filepath = "data/mpns/mpns_v8/"
+# mpns_processed_filepath = "data/processed/mpns/mpns_v8/mpns_name_mappings/"
 process_mpns_v8_raw(
-    input_filepath=mpns_raw_filepath,
-    output_filepath=mpns_processed_filepath,
+    input_filepath=sample_mpns_raw_filepath,
+    output_filepath=sample_mpns_processed_filepath,
     exclude_quality_rating=["L"],
     exclude_taxon_status=["Misapplied"],
 )

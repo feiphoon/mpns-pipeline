@@ -166,10 +166,12 @@ def construct_name_mappings_df(df: DataFrame, is_synonym_filetype: bool) -> Data
     )
 
 
-def write_name_mappings_to_json(df: DataFrame, output_filepath: Path) -> None:
-    df.coalesce(1).write.format("json").option("schema", OUTPUT_SCHEMA).save(
-        output_filepath
-    )
+def write_name_mappings_to_json(df: DataFrame, output_filepath: str) -> None:
+    output_filepath_path: Path = Path(output_filepath).parents[0]
+    output_filepath_path.mkdir(parents=True, exist_ok=True)
+    df.coalesce(1).write.format("json").mode("overwrite").option(
+        "schema", OUTPUT_SCHEMA
+    ).save(output_filepath)
 
 
 def write_process_metadata(output_filepath: Path) -> None:
@@ -177,7 +179,7 @@ def write_process_metadata(output_filepath: Path) -> None:
 
 
 mpns_raw_filepath = "data/mpns/sample_mpns_v8/"
-mpns_processed_filepath = "data/mpns/sample_mpns_v8/mpns_name_mappings"
+mpns_processed_filepath = "data/processed/mpns/sample_mpns_v8/mpns_name_mappings/"
 process_mpns_v8_raw(
     input_filepath=mpns_raw_filepath,
     output_filepath=mpns_processed_filepath,

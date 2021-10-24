@@ -7,6 +7,10 @@ __pycache__/
 venv
 .vscode/*
 
+# Spark
+_SUCCESS
+*.crc
+
 # C extensions
 *.so
 

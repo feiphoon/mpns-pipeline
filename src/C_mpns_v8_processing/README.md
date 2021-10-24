@@ -48,7 +48,7 @@ Then run:
 inv ps.build-no-cache;inv ps.mpns-v8-processing-run
 ```
 
-Note that I could not commit the resulting files from this mapping as it produced about 700MB of data. This will have to be uploaded separately.
+~~Note that I could not commit the resulting files from this mapping as it produced about 700MB of data. This will have to be uploaded separately.~~ Wrote these to `.gz` format.
 
 ## Schemas
 

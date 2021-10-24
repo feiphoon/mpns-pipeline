@@ -182,7 +182,7 @@ def write_name_mappings_to_json(df: DataFrame, output_filepath: str) -> None:
     # Repartition to ballpark of 5 files for real data
     # df.repartition(5).write.format("json").mode("overwrite").option(
     #     "schema", OUTPUT_SCHEMA
-    # ).save(output_filepath)
+    # ).option("compression", "gzip".save(output_filepath)
 
 
 def write_process_metadata(df: DataFrame, output_filepath: Path) -> None:

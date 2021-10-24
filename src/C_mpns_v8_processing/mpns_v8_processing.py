@@ -1,4 +1,5 @@
 import os
+import json
 from pathlib import Path
 from typing import List
 
@@ -129,6 +130,8 @@ def process_mpns_v8_raw(
         df=all_name_mappings_df, output_filepath=output_filepath
     )
 
+    write_process_metadata(df=all_name_mappings_df, output_filepath=output_filepath)
+
 
 def load_for_schema(
     spark: SparkSession, input_filepath: str, schema: StructType, delimiter: str
@@ -176,8 +179,33 @@ def write_name_mappings_to_json(df: DataFrame, output_filepath: str) -> None:
     ).save(output_filepath)
 
 
-def write_process_metadata(output_filepath: Path) -> None:
-    pass
+def write_process_metadata(df: DataFrame, output_filepath: Path) -> None:
+    total_count: int = df.count()
+    is_synonym_count: int = df.filter(f.col("is_synonym") == f.lit(True)).count()
+    is_not_synonym_count: int = df.filter(f.col("is_synonym") == f.lit(False)).count()
+    is_common_name_count: int = df.filter(
+        f.col("non_scientific_name_type") == "common"
+    ).count()
+    is_pharmaceutical_name_count: int = df.filter(
+        f.col("non_scientific_name_type") == "pharmaceutical"
+    ).count()
+    is_sci_cited_medicinal_name_count: int = df.filter(
+        f.col("non_scientific_name_type") == "sci_cited_medicinal"
+    ).count()
+
+    _metadata = {
+        "total_count": total_count,
+        "is_synonym_count": is_synonym_count,
+        "is_not_synonym_count": is_not_synonym_count,
+        "is_common_name_count": is_common_name_count,
+        "is_pharmaceutical_name_count": is_pharmaceutical_name_count,
+        "is_sci_cited_medicinal_name_count": is_sci_cited_medicinal_name_count,
+    }
+
+    with Path(f"{output_filepath}/ process_metadata.json").open(
+        "w", encoding="utf-8"
+    ) as file:
+        json.dump(_metadata, file)
 
 
 # These are here for demonstration purposes

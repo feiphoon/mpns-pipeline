@@ -20,7 +20,8 @@ This stage was done in Spark because, in descending order of importance
 1. The "Low" (`L`) quality rating and "Misapplied" (`Misapplied`) taxanomy status entries are filtered out from the Plants and Synonyms datasets.
 1. Each of the main items in the Plants and the Synonyms datasets are matched against any entries in the Non-Scientific Name datatset, which produces an exploded mapping of the former names to the names in the latter. So the unique items in the resulting name mapping datasets are actually the non-scientific names.
 1. The two name mapping datasets are unioned and each row is given a **contiguous unique numerical ID** as a `mapping_id`. This is an important detail as providing a unique numerical ID in Spark is normally done with `monotonically_increasing_id`, that allows for efficient execution across distributed workers, but it does not produce a contiguous sequence, which may be confusing and later on troublesome during shuffling and splitting the mappings dataset for train/validation/test. This is instead done by the `row_number` Windowing function. However as no partition could be specified for this statement, there is a risk of running out of memory during this operation if the input data is large enough. It is important to note also that neither of these methods are deterministic, so the generation of the `mapping_id` is not idempotent.
-1. The resulting `mpns_name_mappings` dataset is coalesced to a single JSONLines file (against an output schema) and output at `data/processed/mpns/mpns_v8/mpns_name_mappings/`
+1. The resulting `mpns_name_mappings` dataset is repartitioned to several single JSONLines file (against an output schema) and output at `data/processed/mpns/mpns_v8/mpns_name_mappings/`
+1. A `processing_metadata.json` file is also produced with counts on the mappings (see last section on this page).
 
 ## Executing a test run
 
@@ -31,7 +32,7 @@ There are sample datasets at `data/mpns/sample_mpns_v8`. These files contain a s
 
 This means we expect the resulting `mpns_name_mappings` (at `data/processed/mpns/sample_mpns_v8/mpns_name_mappings`) to contain (7 x 5) 35 rows.
 
-To run this for demonstration purposes, go to `src/C_mpns_v8_processing/mpns_v8_processing.py`, change the filepaths to the sample runs in the statements at the bottom of the file.
+To run this for demonstration purposes, go to `src/C_mpns_v8_processing/mpns_v8_processing.py`, change the filepaths to the sample runs in the statements at the bottom of the file, and most importantly change `write` statements in the `write_name_mappings_to_json()` definition - on sample data you want this to **coalesce to 1 file**.
 
 Then run:
 ```bash
@@ -40,13 +41,14 @@ inv ps.build-no-cache;inv ps.sample-mpns-v8-processing-run
 
 ## Executing an actual run
 
-To run this for actual reprocessing, go to `src/C_mpns_v8_processing/mpns_v8_processing.py`, change the filepaths to the non-sample runs in the statements at the bottom of the file.
+To run this for actual reprocessing, go to `src/C_mpns_v8_processing/mpns_v8_processing.py`, change the filepaths to the non-sample runs in the statements at the bottom of the file, and most importantly change `write` statements in the `write_name_mappings_to_json()` definition - on real data you want this to **repartition to 5 files**.
 
 Then run:
 ```bash
 inv ps.build-no-cache;inv ps.mpns-v8-processing-run
 ```
 
+Note that I could not commit the resulting files from this mapping as it produced about 700MB of data. This will have to be uploaded separately.
 
 ## Schemas
 

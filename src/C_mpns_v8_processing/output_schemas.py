@@ -4,22 +4,30 @@ from pyspark.sql.types import (
     ArrayType,
     StringType,
     IntegerType,
+    BooleanType,
 )
 
 OUTPUT_SCHEMA = StructType(
     [
-        StructField("mapping_id", StringType(), False),
+        StructField("mapping_id", IntegerType(), False),
         StructField("full_scientific_name", StringType(), False),
-        StructField("mpns_id", StringType(), False),
-        StructField("is_synonym", StringType(), False),
-        StructField("non_scientific_names_total", IntegerType(), False),
+        StructField("full_scientific_name_id", StringType(), False),
+        StructField("is_synonym", BooleanType(), False),
+        StructField("non_scientific_name", StringType(), False),
+        StructField("non_scientific_type", StringType(), False),
+    ]
+)
+
+PROCESS_METADATA_SCHEMA = StructType(
+    [
         StructField(
-            "non_scientific_names",
+            "file_types",
             ArrayType(
                 StructType(
                     [
-                        StructField("name", StringType(), False),
-                        StructField("type", StringType(), False),
+                        StructField("dataset_name", StringType(), False),
+                        StructField("initial_row_count", StringType(), False),
+                        StructField("end_row_count", StringType(), False),
                     ]
                 ),
                 True,

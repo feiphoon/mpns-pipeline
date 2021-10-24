@@ -133,6 +133,15 @@ JSONL version:
 }
 ```
 
-#### `mpns_name_mappings_metadata.log`
+#### `processing_metadata.json`
 
-TODO
+```json
+{
+    "total_count": 35,
+    "is_synonym_count": 28,
+    "is_not_synonym_count": 7,
+    "is_common_name_count": 20,
+    "is_pharmaceutical_name_count": 0,
+    "is_sci_cited_medicinal_name_count": 15
+}
+```

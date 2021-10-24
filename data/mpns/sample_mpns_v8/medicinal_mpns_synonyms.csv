@@ -1,0 +1,7 @@
+name_id|ipni_id|taxon_status|quality_rating|rank|genus|genus_hybrid|species|species_hybrid|infra_species|parent_author|primary_author|full_scientific_name|acc_name_id
+wcsCmp922693|184363-1|Synonym|M|species|Bellis||armena||||Boiss.|Bellis armena Boiss.|wcsCmp922692
+wcsCmp922694|184383-1|Synonym|M|species|Bellis||hortensis||||Mill.|Bellis hortensis Mill.|wcsCmp922692
+wcsCmp922695|184384-1|Synonym|M|species|Bellis||hybrida||||Ten.|Bellis hybrida Ten.|wcsCmp922692
+wcsCmp922696|184413-1|Synonym|M|species|Bellis||pumila||||Arv.-Touv. & Dupuy|Bellis pumila Arv.-Touv. & Dupuy|wcsCmp922692
+wcsCmp922693|184363-1|Synonym|L|species|Bellis||armena||||Boiss.|Bellis armena Boiss.|wcsCmp922692
+wcsCmp922693|184363-1|Misapplied|M|species|Bellis||armena||||Boiss.|Bellis armena Boiss.|wcsCmp922692

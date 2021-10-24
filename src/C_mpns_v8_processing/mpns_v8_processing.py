@@ -34,19 +34,19 @@ def process_mpns_v8_raw(
     spark = SparkSession.builder.appName("process_mpns_v8_raw").getOrCreate()
 
     # Load the three files into DataFrames
-    plants_df = load_for_schema(
+    plants_df: DataFrame = load_for_schema(
         spark,
         input_filepath=os.path.join(input_filepath, "medicinal_mpns_plants.csv"),
         schema=MPNS_V8_PLANTS,
         delimiter="|",
     )
-    synonyms_df = load_for_schema(
+    synonyms_df: DataFrame = load_for_schema(
         spark,
         input_filepath=os.path.join(input_filepath, "medicinal_mpns_synonyms.csv"),
         schema=MPNS_V8_SYNONYMS,
         delimiter="|",
     )
-    non_scientific_names_df = load_for_schema(
+    non_scientific_names_df: DataFrame = load_for_schema(
         spark,
         input_filepath=os.path.join(
             input_filepath, "medicinal_mpns_non_scientific_names.csv"
@@ -57,67 +57,69 @@ def process_mpns_v8_raw(
 
     # Filter plants DataFrame, join to non-scientific names,
     # construct the name mappings from this.
-    filtered_plants_df = filter_exclusions(
+    filtered_plants_df: DataFrame = filter_exclusions(
         df=plants_df,
         exclude_quality_rating=exclude_quality_rating,
         exclude_taxon_status=exclude_taxon_status,
     )
 
-    plants_to_non_scientific_names_df = filtered_plants_df.join(
+    plants_to_non_scientific_names_df: DataFrame = filtered_plants_df.join(
         non_scientific_names_df,
         filtered_plants_df.name_id == non_scientific_names_df.plant_id,
         "left",
     ).drop(non_scientific_names_df.name_id)
 
-    plants_to_non_scientific_names_cols = [
+    plants_to_non_scientific_names_cols: List = [
         "name_id",
         "full_scientific_name",
         "name",
         "name_type",
     ]
-    plants_to_non_scientific_names_df = plants_to_non_scientific_names_df.select(
-        *plants_to_non_scientific_names_cols
+    plants_to_non_scientific_names_df: DataFrame = (
+        plants_to_non_scientific_names_df.select(*plants_to_non_scientific_names_cols)
     )
 
-    plants_to_non_scientific_names_df = construct_name_mappings_df(
+    plants_to_non_scientific_names_df: DataFrame = construct_name_mappings_df(
         df=plants_to_non_scientific_names_df, is_synonym_filetype=False
     )
 
     # Filter synonyms DataFrame, join to non-scientific names,
     # construct the name mappings from this.
-    filtered_synonyms_df = filter_exclusions(
+    filtered_synonyms_df: DataFrame = filter_exclusions(
         df=synonyms_df,
         exclude_quality_rating=exclude_quality_rating,
         exclude_taxon_status=exclude_taxon_status,
     )
 
-    synonyms_to_non_scientific_names_df = filtered_synonyms_df.join(
+    synonyms_to_non_scientific_names_df: DataFrame = filtered_synonyms_df.join(
         non_scientific_names_df,
         filtered_synonyms_df.acc_name_id == non_scientific_names_df.plant_id,
         "left",
     ).drop(non_scientific_names_df.name_id)
 
-    synonyms_to_non_scientific_names_cols = [
+    synonyms_to_non_scientific_names_cols: List = [
         "name_id",
         "full_scientific_name",
         "name",
         "name_type",
     ]
-    synonyms_to_non_scientific_names_df = synonyms_to_non_scientific_names_df.select(
-        *synonyms_to_non_scientific_names_cols
+    synonyms_to_non_scientific_names_df: DataFrame = (
+        synonyms_to_non_scientific_names_df.select(
+            *synonyms_to_non_scientific_names_cols
+        )
     )
 
-    synonyms_to_non_scientific_names_df = construct_name_mappings_df(
+    synonyms_to_non_scientific_names_df: DataFrame = construct_name_mappings_df(
         df=synonyms_to_non_scientific_names_df, is_synonym_filetype=True
     )
 
     # Join both name mappings DataFrames for everything
-    all_name_mappings_df = plants_to_non_scientific_names_df.union(
+    all_name_mappings_df: DataFrame = plants_to_non_scientific_names_df.union(
         synonyms_to_non_scientific_names_df
     )
 
     # Add a unique mapping_id - won't be deterministic with each run!
-    all_name_mappings_df = all_name_mappings_df.withColumn(
+    all_name_mappings_df: DataFrame = all_name_mappings_df.withColumn(
         "mapping_id",
         f.row_number().over(Window.orderBy("full_scientific_name")),
     )

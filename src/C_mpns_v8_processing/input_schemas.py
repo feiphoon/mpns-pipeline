@@ -28,7 +28,6 @@ MPNS_V8_SYNONYMS = StructType(
         StructField("taxon_status", StringType(), True),
         StructField("quality_rating", StringType(), True),
         StructField("rank", StringType(), True),
-        StructField("family", StringType(), True),
         StructField("genus", StringType(), True),
         StructField("genus_hybrid", StringType(), True),
         StructField("species", StringType(), True),

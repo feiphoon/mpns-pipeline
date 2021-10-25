@@ -1,0 +1,20 @@
+[
+    {
+        "text": "scientific",
+        "suffix_key": "f",
+        "background_color": "#004DFF",
+        "text_color": "#ffffff"
+    },
+    {
+        "text": "common",
+        "suffix_key": "c",
+        "background_color": "#00A717",
+        "text_color": "#ffffff"
+    },
+    {
+        "text": "pharmaceutical",
+        "suffix_key": "c",
+        "background_color": "#FF8700",
+        "text_color": "#ffffff"
+    }
+]

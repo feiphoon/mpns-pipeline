@@ -8,7 +8,7 @@ The required format is a JSON file (example from the doccano server walkthrough)
 [
     {
         "text": "Dog",
-        "suffix_key": "a",
+        "suffix_key": "d",
         "background_color": "#FF0000",
         "text_color": "#ffffff"
     },

@@ -1,7 +1,7 @@
 [
     {
         "text": "scientific",
-        "suffix_key": "f",
+        "suffix_key": "s",
         "background_color": "#004DFF",
         "text_color": "#ffffff"
     },
@@ -13,7 +13,7 @@
     },
     {
         "text": "pharmaceutical",
-        "suffix_key": "c",
+        "suffix_key": "p",
         "background_color": "#FF8700",
         "text_color": "#ffffff"
     }

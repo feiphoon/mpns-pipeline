@@ -15,7 +15,7 @@ from input_schemas import (
     MPNS_V8_NON_SCIENTIFIC_NAMES,
 )
 
-from output_schemas import OUTPUT_SCHEMA
+from output_schemas import OUTPUT_SCHEMA_V1
 
 
 #  Monkeypatch in case I don't use Spark 3.0
@@ -176,7 +176,7 @@ def write_name_mappings_to_json(df: DataFrame, output_filepath: str) -> None:
     output_filepath_path.mkdir(parents=True, exist_ok=True)
     # Coalesce to 1 file for sample demonstration
     df.coalesce(1).write.format("json").mode("overwrite").option(
-        "schema", OUTPUT_SCHEMA
+        "schema", OUTPUT_SCHEMA_V1
     ).save(output_filepath)
 
     # Repartition to ballpark of 5 files for real data

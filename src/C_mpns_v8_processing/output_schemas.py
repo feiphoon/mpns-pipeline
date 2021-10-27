@@ -7,7 +7,7 @@ from pyspark.sql.types import (
     BooleanType,
 )
 
-OUTPUT_SCHEMA = StructType(
+OUTPUT_SCHEMA_V1 = StructType(
     [
         StructField("mapping_id", IntegerType(), False),
         StructField("full_scientific_name", StringType(), False),

@@ -31,6 +31,7 @@ def process_mpns_v8_raw(
     output_filepath: Path,
     exclude_quality_rating: List[str],
     exclude_taxon_status: List[str],
+    sample_run: bool,
 ) -> None:
     spark = SparkSession.builder.appName("process_mpns_v8_raw").getOrCreate()
 
@@ -127,7 +128,7 @@ def process_mpns_v8_raw(
 
     # Write name mappings to JSON files
     write_name_mappings_to_json(
-        df=all_name_mappings_df, output_filepath=output_filepath
+        df=all_name_mappings_df, output_filepath=output_filepath, sample_run=sample_run
     )
 
     write_process_metadata(df=all_name_mappings_df, output_filepath=output_filepath)
@@ -171,18 +172,23 @@ def construct_name_mappings_df(df: DataFrame, is_synonym_filetype: bool) -> Data
     )
 
 
-def write_name_mappings_to_json(df: DataFrame, output_filepath: str) -> None:
+def write_name_mappings_to_json(
+    df: DataFrame, output_filepath: str, sample_run: bool
+) -> None:
     output_filepath_path: Path = Path(output_filepath).parents[0]
     output_filepath_path.mkdir(parents=True, exist_ok=True)
-    # Coalesce to 1 file for sample demonstration
-    df.coalesce(1).write.format("json").mode("overwrite").option(
-        "schema", OUTPUT_SCHEMA_V1
-    ).save(output_filepath)
 
-    # Repartition to ballpark of 5 files for real data
-    # df.repartition(5).write.format("json").mode("overwrite").option(
-    #     "schema", OUTPUT_SCHEMA
-    # ).option("compression", "gzip".save(output_filepath)
+    if sample_run:
+        # Coalesce to 1 file for sample demonstration
+        df.coalesce(1).write.format("json").mode("overwrite").option(
+            "schema", OUTPUT_SCHEMA_V1
+        ).save(output_filepath)
+
+    else:
+        # Repartition to ballpark of 5 files for real data
+        df.repartition(5).write.format("json").mode("overwrite").option(
+            "schema", OUTPUT_SCHEMA_V1
+        ).option("compression", "gzip".save(output_filepath))
 
 
 def write_process_metadata(df: DataFrame, output_filepath: Path) -> None:
@@ -219,12 +225,20 @@ sample_mpns_raw_filepath = "data/mpns/sample_mpns_v8/"
 sample_mpns_processed_filepath = (
     "data/processed/mpns/sample_mpns_v8/mpns_name_mappings/v1/"
 )
-
-# mpns_raw_filepath = "data/mpns/mpns_v8/"
-# mpns_processed_filepath = "data/processed/mpns/mpns_v8/mpns_name_mappings/v1/"
 process_mpns_v8_raw(
     input_filepath=sample_mpns_raw_filepath,
     output_filepath=sample_mpns_processed_filepath,
     exclude_quality_rating=["L"],
     exclude_taxon_status=["Misapplied"],
+    sample_run=True,
 )
+
+# mpns_raw_filepath = "data/mpns/mpns_v8/"
+# mpns_processed_filepath = "data/processed/mpns/mpns_v8/mpns_name_mappings/v1/"
+# process_mpns_v8_raw(
+#     input_filepath=mpns_raw_filepath,
+#     output_filepath=mpns_processed_filepath,
+#     exclude_quality_rating=["L"],
+#     exclude_taxon_status=["Misapplied"],
+#     sample_run=False,
+# )

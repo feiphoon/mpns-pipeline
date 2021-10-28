@@ -17,6 +17,17 @@ OUTPUT_SCHEMA_V1 = StructType(
     ]
 )
 
+OUTPUT_SCHEMA_V2 = StructType(
+    [
+        StructField("mapping_id", IntegerType(), False),
+        StructField("full_scientific_name_id", StringType(), False),
+        StructField("scientific_name", StringType(), False),
+        StructField("scientific_name_type", StringType(), False),
+        StructField("non_scientific_name", StringType(), False),
+        StructField("non_scientific_type", StringType(), False),
+    ]
+)
+
 # PROCESS_METADATA_SCHEMA = StructType(
 #     [
 #         StructField("total_count", IntegerType(), False),

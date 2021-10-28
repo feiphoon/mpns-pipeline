@@ -217,11 +217,11 @@ def write_process_metadata(df: DataFrame, output_filepath: Path) -> None:
 # These are here for demonstration purposes
 sample_mpns_raw_filepath = "data/mpns/sample_mpns_v8/"
 sample_mpns_processed_filepath = (
-    "data/processed/mpns/sample_mpns_v8/mpns_name_mappings/"
+    "data/processed/mpns/sample_mpns_v8/mpns_name_mappings/v1/"
 )
 
 # mpns_raw_filepath = "data/mpns/mpns_v8/"
-# mpns_processed_filepath = "data/processed/mpns/mpns_v8/mpns_name_mappings/"
+# mpns_processed_filepath = "data/processed/mpns/mpns_v8/mpns_name_mappings/v1/"
 process_mpns_v8_raw(
     input_filepath=sample_mpns_raw_filepath,
     output_filepath=sample_mpns_processed_filepath,

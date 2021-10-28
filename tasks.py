@@ -18,7 +18,7 @@ def build_no_cache(c):
 
 
 @task
-def sample_mpns_v8_processing_run_v1(c):
+def mpns_v8_processing_run_v1(c):
     c.run(
         "docker run -v $(pwd):/job punchy/ner-pipeline:0.1.0 \
             src/C_mpns_v8_processing/mpns_v8_processing_v1.py \
@@ -46,8 +46,7 @@ ps = Collection("ps")
 
 ps.add_task(build)
 ps.add_task(build_no_cache)
-ps.add_task(mpns_v8_processing_run)
-ps.add_task(sample_mpns_v8_processing_run_v1)
+ps.add_task(mpns_v8_processing_run_v1)
 ns.add_collection(ps)
 
 

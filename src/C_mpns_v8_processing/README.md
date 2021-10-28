@@ -11,7 +11,13 @@ This stage was done in Spark because, in descending order of importance
 - In case of larger data which can't be handled on a local machine, this code can be run in Google Colab or a cloud distributed processing microservice
 - Casting and transformations were painless
 
-## Transformations in a run
+Two processing versions are available at this stage - this was because of improvements. The one in use will be v2; v1 has been kept for posterity.
+
+
+
+## Processing v1
+
+### Transformations in a run
 
 1. The Plants, Synonyms and Non-Scientific Names datasets are loaded against their respected schemas from `data/mpns/mpns_v8`:
     - `medicinal_mpns_plants.csv`
@@ -23,7 +29,7 @@ This stage was done in Spark because, in descending order of importance
 1. The resulting `mpns_name_mappings` dataset is repartitioned to several single JSONLines file (against an output schema) and output at `data/processed/mpns/mpns_v8/mpns_name_mappings/`
 1. A `processing_metadata.json` file is also produced with counts on the mappings (see last section on this page).
 
-## Executing a test run
+### Executing a test run
 
 There are sample datasets at `data/mpns/sample_mpns_v8`. These files contain a select sample of items (all linked to the same 1 plant) from the real datasets, and only exist for demonstration purposes.
 - `medicinal_mpns_plants.csv`: 3 rows, only 1 of which should pass the filter
@@ -32,29 +38,27 @@ There are sample datasets at `data/mpns/sample_mpns_v8`. These files contain a s
 
 This means we expect the resulting `mpns_name_mappings` (at `data/processed/mpns/sample_mpns_v8/mpns_name_mappings`) to contain (7 x 5) 35 rows.
 
-To run this for demonstration purposes, go to `src/C_mpns_v8_processing/mpns_v8_processing.py`, change the filepaths to the sample runs in the statements at the bottom of the file, and most importantly change `write` statements in the `write_name_mappings_to_json()` definition - on sample data you want this to **coalesce to 1 file**.
+To run this for demonstration purposes, go to `src/C_mpns_v8_processing/mpns_v8_processing.py`, uncomment the relevant block of filepaths and code for the sample runs in the statements at the bottom of the file (comment out the real run). Sample data is **coalesced to 1 file**.
 
 Then run:
 ```bash
-inv ps.build-no-cache;inv ps.sample-mpns-v8-processing-run
+inv ps.build-no-cache;inv ps.sample-mpns-v8-processing-run-v1
 ```
 
-## Executing an actual run
+### Executing an actual run
 
-To run this for actual reprocessing, go to `src/C_mpns_v8_processing/mpns_v8_processing.py`, change the filepaths to the non-sample runs in the statements at the bottom of the file, and most importantly change `write` statements in the `write_name_mappings_to_json()` definition - on real data you want this to **repartition to 5 files**.
+To run this for actual reprocessing, go to `src/C_mpns_v8_processing/mpns_v8_processing.py`, , uncomment the relevant block of filepaths and code for the real runs in the statements at the bottom of the file (comment out the sample run). Real data is **repartitioned to 5 files and compressed to gzip format**.
 
 Then run:
 ```bash
-inv ps.build-no-cache;inv ps.mpns-v8-processing-run
+inv ps.build-no-cache;inv ps.mpns-v8-processing-run-v1
 ```
 
-~~Note that I could not commit the resulting files from this mapping as it produced about 700MB of data. This will have to be uploaded separately.~~ Wrote these to `.gz` format.
+### Schemas
 
-## Schemas
+#### Input:
 
-### Input:
-
-#### `medicinal_mpns_plants.csv`
+##### `medicinal_mpns_plants.csv`
 
 
 | name_id      | ipni_id  | taxon_status | quality_rating | rank    | family     | genus      | genus_hybrid | species  | species_hybrid | infra_species | parent_author | primary_author | full_scientific_name     |
@@ -65,7 +69,7 @@ inv ps.build-no-cache;inv ps.mpns-v8-processing-run
 
 
 
-#### `medicinal_mpns_synonyms.csv`
+##### `medicinal_mpns_synonyms.csv`
 
 
 | name_id      | ipni_id  | taxon_status | quality_rating | rank    | genus  | genus_hybrid | species   | species_hybrid | infra_species | parent_author | primary_author     | full_scientific_name             | acc_name_id  |
@@ -78,7 +82,7 @@ inv ps.build-no-cache;inv ps.mpns-v8-processing-run
 | wcsCmp922693 | 184363-1 | Misapplied   | M              | species | Bellis | null         | armena    | null           | null          | null          | Boiss.             | Bellis armena Boiss.             | wcsCmp922692 |
 
 
-#### `medicinal_mpns_non_scientific_names.csv`
+##### `medicinal_mpns_non_scientific_names.csv`
 
 | name_type           | name                     | plant_id     | name_id      |
 |---------------------|--------------------------|--------------|--------------|
@@ -92,9 +96,9 @@ inv ps.build-no-cache;inv ps.mpns-v8-processing-run
 | common              | common daisy             | wcsCmp922692 | wcsCmp922692 |
 
 
-### Output
+#### Output
 
-#### `mpns_name_mappings.json`
+##### v1 `mpns_name_mappings.json`
 
 
 | full_scientific_name_id | full_scientific_name   | non_scientific_name      | non_scientific_name_type | is_synonym | mapping_id |
@@ -135,7 +139,7 @@ JSONL version:
 }
 ```
 
-#### `processing_metadata.json`
+##### v1 `processing_metadata.json`
 
 ```json
 {

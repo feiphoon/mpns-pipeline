@@ -220,6 +220,8 @@ def write_process_metadata(df: DataFrame, output_filepath: Path) -> None:
         json.dump(_metadata, file)
 
 
+# TODO: Use argparse to pass sample_run as a flag to container.
+
 # These are here for demonstration purposes
 sample_mpns_raw_filepath = "data/mpns/sample_mpns_v8/"
 sample_mpns_processed_filepath = (

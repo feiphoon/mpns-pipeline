@@ -67,107 +67,44 @@ def process_mpns_v8_raw(
         f.col("name_type") != "sci_cited_medicinal"
     )
 
-    # Join sci_cited_medicinal_names to to common & pharmaceutical names.
-    # Note that the plant_id here will be a full_scientific_name_id,
-    # or the name_id that matches an entry in the plants table.
-    # So the plant_id is joined to plant_id here.
-    # The renames here are just to make this consistent to use
-    # the construct_name_mappings_df() function. The order is important.
-    sci_cited_medicinal_names_df: DataFrame = (
-        sci_cited_medicinal_names_df.withColumnRenamed(
-            "name", "full_scientific_name"
-        ).drop("name_type", "name_id")
-    )
-    sci_cited_medicinal_to_common_and_pharmaceutical_names_df: DataFrame = (
-        sci_cited_medicinal_names_df.join(
-            common_and_pharmaceutical_names_df,
-            sci_cited_medicinal_names_df.plant_id
-            == common_and_pharmaceutical_names_df.plant_id,
-            "left",
-        )
-        .drop(
-            common_and_pharmaceutical_names_df.plant_id,
-        )
-        .drop("name_id")
-    )
-
-    sci_cited_medicinal_to_common_and_pharmaceutical_names_df: DataFrame = (
-        construct_name_mappings_df(
-            df=sci_cited_medicinal_to_common_and_pharmaceutical_names_df,
-            scientific_name_type="sci_cited_medicinal",
+    # Create three name mapping DataFrames
+    plants_to_common_and_pharmaceutical_names_df = (
+        create_plants_to_common_and_pharmaceutical_names_df(
+            plants_df=plants_df,
+            common_and_pharmaceutical_names_df=common_and_pharmaceutical_names_df,
+            exclude_quality_rating=exclude_quality_rating,
+            exclude_taxon_status=exclude_taxon_status,
         )
     )
 
-    # Filter plants DataFrame, join to common & pharmaceutical names,
-    # construct the name mappings from this.
-    filtered_plants_df: DataFrame = filter_exclusions(
-        df=plants_df,
-        exclude_quality_rating=exclude_quality_rating,
-        exclude_taxon_status=exclude_taxon_status,
-    )
+    # print(plants_to_common_and_pharmaceutical_names_df.show(truncate=False))
 
-    plants_to_common_and_pharmaceutical_names_df: DataFrame = filtered_plants_df.join(
-        common_and_pharmaceutical_names_df,
-        filtered_plants_df.name_id == common_and_pharmaceutical_names_df.plant_id,
-        "left",
-    ).drop(common_and_pharmaceutical_names_df.name_id)
-
-    plants_to_common_and_pharmaceutical_names_df_cols: List = [
-        "name_id",
-        "full_scientific_name",
-        "name",
-        "name_type",
-    ]
-    plants_to_common_and_pharmaceutical_names_df: DataFrame = (
-        plants_to_common_and_pharmaceutical_names_df.select(
-            *plants_to_common_and_pharmaceutical_names_df_cols
+    synonyms_to_common_and_pharmaceutical_names_df = (
+        create_synonyms_to_common_and_pharmaceutical_names_df(
+            synonyms_df=synonyms_df,
+            common_and_pharmaceutical_names_df=common_and_pharmaceutical_names_df,
+            exclude_quality_rating=exclude_quality_rating,
+            exclude_taxon_status=exclude_taxon_status,
         )
     )
 
-    plants_to_common_and_pharmaceutical_names_df: DataFrame = (
-        construct_name_mappings_df(
-            df=plants_to_common_and_pharmaceutical_names_df,
-            scientific_name_type="plant",
+    # print(synonyms_to_common_and_pharmaceutical_names_df.show(truncate=False))
+
+    sci_cited_medicinal_to_common_and_pharmaceutical_names_df = (
+        create_sci_cited_medicinal_to_common_and_pharmaceutical_names_df(
+            plants_df=plants_df,
+            sci_cited_medicinal_names_df=sci_cited_medicinal_names_df,
+            common_and_pharmaceutical_names_df=common_and_pharmaceutical_names_df,
+            exclude_quality_rating=exclude_quality_rating,
+            exclude_taxon_status=exclude_taxon_status,
         )
     )
 
-    # Filter synonyms DataFrame, join to common & pharmaceutical names,
-    # construct the name mappings from this.
-    filtered_synonyms_df: DataFrame = filter_exclusions(
-        df=synonyms_df,
-        exclude_quality_rating=exclude_quality_rating,
-        exclude_taxon_status=exclude_taxon_status,
-    )
+    # print(
+    #     sci_cited_medicinal_to_common_and_pharmaceutical_names_df.show(truncate=False)
+    # )
 
-    synonyms_to_common_and_pharmaceutical_names_df: DataFrame = (
-        filtered_synonyms_df.join(
-            common_and_pharmaceutical_names_df,
-            filtered_synonyms_df.acc_name_id
-            == common_and_pharmaceutical_names_df.plant_id,
-            "left",
-        ).drop(common_and_pharmaceutical_names_df.name_id)
-    )
-
-    synonyms_to_common_and_pharmaceutical_names_cols: List = [
-        "name_id",
-        "full_scientific_name",
-        "name",
-        "name_type",
-    ]
-    synonyms_to_common_and_pharmaceutical_names_df: DataFrame = (
-        synonyms_to_common_and_pharmaceutical_names_df.select(
-            *synonyms_to_common_and_pharmaceutical_names_cols
-        )
-    )
-
-    synonyms_to_common_and_pharmaceutical_names_df: DataFrame = (
-        construct_name_mappings_df(
-            df=synonyms_to_common_and_pharmaceutical_names_df,
-            scientific_name_type="synonym",
-        )
-    )
-
-    # Join all three name mappings DataFrames for everythingß
+    # Join all three name mappings DataFrames for everything
     _dfs_to_union: list = [
         plants_to_common_and_pharmaceutical_names_df,
         synonyms_to_common_and_pharmaceutical_names_df,
@@ -183,9 +120,11 @@ def process_mpns_v8_raw(
     )
 
     # Write name mappings to JSON files
-    write_name_mappings_to_json(
+    write_name_mappings_to_file(
         df=all_name_mappings_df, output_filepath=output_filepath, sample_run=sample_run
     )
+
+    print(all_name_mappings_df.show(truncate=False))
 
     write_process_metadata(df=all_name_mappings_df, output_filepath=output_filepath)
 
@@ -219,32 +158,189 @@ def filter_exclusions(
     return df
 
 
+def create_plants_to_common_and_pharmaceutical_names_df(
+    plants_df: DataFrame,
+    common_and_pharmaceutical_names_df: DataFrame,
+    exclude_quality_rating: List[str],
+    exclude_taxon_status: List[str],
+) -> DataFrame:
+    # Filter plants DataFrame, join to common & pharmaceutical names,
+    # construct the name mappings from this.
+    filtered_plants_df: DataFrame = (
+        filter_exclusions(
+            df=plants_df,
+            exclude_quality_rating=exclude_quality_rating,
+            exclude_taxon_status=exclude_taxon_status,
+        )
+        .withColumnRenamed("name_id", "scientific_name_id")
+        .withColumnRenamed("full_scientific_name", "scientific_name")
+    )
+
+    plants_to_common_and_pharmaceutical_names_df: DataFrame = filtered_plants_df.join(
+        common_and_pharmaceutical_names_df,
+        filtered_plants_df.scientific_name_id
+        == common_and_pharmaceutical_names_df.plant_id,
+        "left",
+    )
+
+    plants_to_common_and_pharmaceutical_names_df_cols: List = [
+        "scientific_name_id",
+        "scientific_name",
+        "name_id",
+        "name",
+        "name_type",
+    ]
+    plants_to_common_and_pharmaceutical_names_df: DataFrame = (
+        plants_to_common_and_pharmaceutical_names_df.select(
+            *plants_to_common_and_pharmaceutical_names_df_cols
+        )
+    )
+
+    return construct_name_mappings_df(
+        df=plants_to_common_and_pharmaceutical_names_df,
+        scientific_name_type="plant",
+    )
+
+
+def create_synonyms_to_common_and_pharmaceutical_names_df(
+    synonyms_df: DataFrame,
+    common_and_pharmaceutical_names_df: DataFrame,
+    exclude_quality_rating: List[str],
+    exclude_taxon_status: List[str],
+) -> DataFrame:
+    # Filter synonyms DataFrame, join to common & pharmaceutical names,
+    # construct the name mappings from this.
+    filtered_synonyms_df: DataFrame = (
+        filter_exclusions(
+            df=synonyms_df,
+            exclude_quality_rating=exclude_quality_rating,
+            exclude_taxon_status=exclude_taxon_status,
+        )
+        .withColumnRenamed("name_id", "scientific_name_id")
+        .withColumnRenamed("full_scientific_name", "scientific_name")
+    )
+
+    synonyms_to_common_and_pharmaceutical_names_df: DataFrame = (
+        filtered_synonyms_df.join(
+            common_and_pharmaceutical_names_df,
+            filtered_synonyms_df.acc_name_id
+            == common_and_pharmaceutical_names_df.plant_id,
+            "left",
+        )
+    )
+
+    synonyms_to_common_and_pharmaceutical_names_cols: List = [
+        "scientific_name_id",
+        "scientific_name",
+        "name_id",
+        "name",
+        "name_type",
+    ]
+    synonyms_to_common_and_pharmaceutical_names_df: DataFrame = (
+        synonyms_to_common_and_pharmaceutical_names_df.select(
+            *synonyms_to_common_and_pharmaceutical_names_cols
+        )
+    )
+
+    return construct_name_mappings_df(
+        df=synonyms_to_common_and_pharmaceutical_names_df,
+        scientific_name_type="synonym",
+    )
+
+
+def create_sci_cited_medicinal_to_common_and_pharmaceutical_names_df(
+    plants_df: DataFrame,
+    sci_cited_medicinal_names_df: DataFrame,
+    common_and_pharmaceutical_names_df: DataFrame,
+    exclude_quality_rating: List[str],
+    exclude_taxon_status: List[str],
+) -> DataFrame:
+    # Get only the plants which meet the minimum standard of exclusions
+    # So we can right join it to the sci_cited_medicinal names
+    # to ensure we only use correct ones.
+    filtered_plants_df: DataFrame = (
+        filter_exclusions(
+            df=plants_df,
+            exclude_quality_rating=exclude_quality_rating,
+            exclude_taxon_status=exclude_taxon_status,
+        )
+        .select("name_id")
+        .withColumnRenamed("name_id", "filtered_plants_name_id")
+    )
+
+    sci_cited_medicinal_names_df: DataFrame = sci_cited_medicinal_names_df.join(
+        filtered_plants_df,
+        sci_cited_medicinal_names_df.plant_id
+        == filtered_plants_df.filtered_plants_name_id,
+        "right",
+    ).drop("filtered_plants_name_id")
+
+    # Join sci_cited_medicinal_names to to common & pharmaceutical names.
+    # Note that the plant_id here will be a full_scientific_name_id,
+    # or the name_id that matches an entry in the plants table.
+    # So the plant_id is joined to plant_id here.
+    # The rename here are just to make this consistent to use
+    # the construct_name_mappings_df() function. The order is important.
+    sci_cited_medicinal_names_df: DataFrame = (
+        sci_cited_medicinal_names_df.withColumnRenamed("name_id", "scientific_name_id")
+        .withColumnRenamed("name", "scientific_name")
+        .drop("name_type")
+    )
+    sci_cited_medicinal_to_common_and_pharmaceutical_names_df: DataFrame = (
+        sci_cited_medicinal_names_df.join(
+            common_and_pharmaceutical_names_df,
+            sci_cited_medicinal_names_df.plant_id
+            == common_and_pharmaceutical_names_df.plant_id,
+            "left",
+        ).drop(
+            common_and_pharmaceutical_names_df.plant_id,
+        )
+    )
+
+    sci_cited_medicinal_to_common_and_pharmaceutical_names_cols: List = [
+        "scientific_name_id",
+        "scientific_name",
+        "name_id",
+        "name",
+        "name_type",
+    ]
+    sci_cited_medicinal_to_common_and_pharmaceutical_names_df: DataFrame = (
+        sci_cited_medicinal_to_common_and_pharmaceutical_names_df.select(
+            *sci_cited_medicinal_to_common_and_pharmaceutical_names_cols
+        )
+    )
+
+    return construct_name_mappings_df(
+        df=sci_cited_medicinal_to_common_and_pharmaceutical_names_df,
+        scientific_name_type="sci_cited_medicinal",
+    )
+
+
 def construct_name_mappings_df(df: DataFrame, scientific_name_type: str) -> DataFrame:
     return (
-        df.withColumnRenamed("name_id", "full_scientific_name_id")
+        df.withColumnRenamed("name_id", "non_scientific_name_id")
         .withColumnRenamed("name", "non_scientific_name")
         .withColumnRenamed("name_type", "non_scientific_name_type")
-        .withColumnRenamed("full_scientific_name", "scientific_name")
         .withColumn("scientific_name_type", f.lit(scientific_name_type))
     )
 
 
-def write_name_mappings_to_json(
+def write_name_mappings_to_file(
     df: DataFrame, output_filepath: str, sample_run: bool
 ) -> None:
     output_filepath_path: Path = Path(output_filepath).parents[0]
     output_filepath_path.mkdir(parents=True, exist_ok=True)
     if sample_run:
-        # Coalesce to 1 file for sample demonstration
+        # Coalesce to 1 JSON file for sample demonstration
         df.coalesce(1).write.format("json").mode("overwrite").option(
             "schema", OUTPUT_SCHEMA_V2
         ).save(output_filepath)
 
     else:
-        # Repartition to ballpark of 5 files for real data
-        df.repartition(5).write.format("json").mode("overwrite").option(
+        # Repartition to ballpark of 5 parquet files for real data
+        df.repartition(5).write.mode("overwrite").option(
             "schema", OUTPUT_SCHEMA_V2
-        ).option("compression", "gzip").save(output_filepath)
+        ).parquet(output_filepath)
 
 
 def write_process_metadata(df: DataFrame, output_filepath: Path) -> None:

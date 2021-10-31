@@ -16,7 +16,11 @@ Two processing versions are available at this stage - this was because of improv
 
 ## Processing v2
 
+TODO: the meaning of full_scientific_name_id here is wrong actually due to the use of sci_cited_medicinal. What does it need to be? We need it to link back to an entry someplace. In the case of the latter, the non_scientific_names table.
+
 TODO: Should I have split these v2 mappings instead into three separate folders here - plant, synonym & sci_cited_medicinal? I think yes as it will make it easier to manage mappings for training later. Partition by "scientific_name_type".
+
+TODO: I think they need to be parquet because of the characters problem - uses a character as a delimiter.
 
 ### Transformations in a run
 

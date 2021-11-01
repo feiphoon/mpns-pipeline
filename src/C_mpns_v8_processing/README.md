@@ -17,8 +17,6 @@ Two processing versions are available at this stage - this was because of improv
 
 ## Processing V2
 
-TODO: Should I have split these v2 mappings instead into three separate folders here - plant, synonym & sci_cited_medicinal? I think yes as it will make it easier to manage mappings for training later. Partition by "scientific_name_type".
-
 ### Transformations in a run
 
 1. The Plants, Synonyms and Non-Scientific Names datasets are loaded against their respected schemas from `data/mpns/mpns_v8`:
@@ -29,7 +27,7 @@ TODO: Should I have split these v2 mappings instead into three separate folders 
 1. The `common` & `pharmaceutical` names in the Non-Scientific Name dataset are separated from the `sci_cited_medicinal` entries.
 1. Each of the main items in the Plants, Synonyms and Sci-Cited-Medicinal datasets are matched against any entries in the Common & Pharmaceutical Name datatsets, which produces an exploded mapping of the former names to the names in the latter.
 1. The three name mapping datasets are unioned and each row is given a **contiguous unique numerical ID** as a `mapping_id`. This is an important detail as providing a unique numerical ID in Spark is normally done with `monotonically_increasing_id`, that allows for efficient execution across distributed workers, but it does not produce a contiguous sequence, which may be confusing and later on troublesome during shuffling and splitting the mappings dataset for train/validation/test. This is instead done by the `row_number` Windowing function. However as no partition could be specified for this statement, there is a risk of running out of memory during this operation if the input data is large enough. It is important to note also that neither of these methods are deterministic, so the generation of the `mapping_id` is not idempotent.
-1. The resulting `mpns_name_mappings` dataset is repartitioned to several parquet files (against an output schema) and output at `data/processed/mpns/mpns_v8/mpns_name_mappings/v2/`
+1. The resulting `mpns_name_mappings` dataset is repartitioned to several parquet files (against an output schema) and output at `data/processed/mpns/mpns_v8/mpns_name_mappings/v2/`. The output is partitioned by `scientific_name_type`, so `plant`, `synonym` & `sci_cited_medicinal` folders are produced. It will make it easier to manage mappings for training later.
 1. A `processing_metadata.json` file is also produced with counts on the mappings (see last part of this v2 section).
 
 ### Executing a test run

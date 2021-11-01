@@ -124,7 +124,7 @@ def process_mpns_v8_raw(
         df=all_name_mappings_df, output_filepath=output_filepath, sample_run=sample_run
     )
 
-    print(all_name_mappings_df.show(truncate=False))
+    # print(all_name_mappings_df.show(truncate=False))
 
     write_process_metadata(df=all_name_mappings_df, output_filepath=output_filepath)
 

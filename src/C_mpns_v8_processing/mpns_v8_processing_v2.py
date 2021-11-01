@@ -340,7 +340,7 @@ def write_name_mappings_to_file(
         # Repartition to ballpark of 5 parquet files for real data
         df.repartition(5).write.mode("overwrite").option(
             "schema", OUTPUT_SCHEMA_V2
-        ).parquet(output_filepath)
+        ).partitionBy("scientific_name_type").parquet(output_filepath)
 
 
 def write_process_metadata(df: DataFrame, output_filepath: Path) -> None:

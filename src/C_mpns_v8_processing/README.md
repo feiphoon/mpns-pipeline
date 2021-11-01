@@ -37,7 +37,7 @@ TODO: Should I have split these v2 mappings instead into three separate folders 
 There are sample datasets at `data/mpns/sample_mpns_v8/v2`. These files contain a select sample of items (all linked to the same 1 plant) from the real datasets, and only exist for demonstration purposes.
 - `medicinal_mpns_plants.csv`: 3 rows, only 1 of which should pass the filter
 - `medicinal_mpns_synonyms.csv`: 6 rows, only 4 of which should pass the filter
-- `medicinal_mpns_non_scientific_names.csv`: 7 rows, which are split into common & pharmaceutical names, and sci_cited_medicinal names. Only the latter are filtered. joined to matches against the total of 5 records from the first two datasets.
+- `medicinal_mpns_non_scientific_names.csv`: 7 rows, which are split into `common` & `pharmaceutical` names, and `sci_cited_medicinal` names. Only the latter are filtered. joined to matches against the total of 5 records from the first two datasets.
     - `common`: 5
     - `pharmaceutical`: 0
     - `sci_cited_medicinal`: 3

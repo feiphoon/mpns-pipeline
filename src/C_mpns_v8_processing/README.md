@@ -15,7 +15,7 @@ This stage was done in Spark because, in descending order of importance
 Two processing versions are available at this stage - this was because of improvements. The one in use will be v2; v1 has been kept for posterity.
 
 
-## Processing v2
+## Processing V2
 
 TODO: Should I have split these v2 mappings instead into three separate folders here - plant, synonym & sci_cited_medicinal? I think yes as it will make it easier to manage mappings for training later. Partition by "scientific_name_type".
 
@@ -154,7 +154,7 @@ JSON representation for easier reading (can be observed in the sample run):
 
 -----------
 
-## Processing v1
+## Processing V1
 
 ### Transformations in a run
 

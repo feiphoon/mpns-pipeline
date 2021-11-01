@@ -1,18 +1,29 @@
 from pyspark.sql.types import (
     StructType,
     StructField,
-    ArrayType,
     StringType,
     IntegerType,
     BooleanType,
 )
 
-OUTPUT_SCHEMA = StructType(
+OUTPUT_SCHEMA_V1 = StructType(
     [
         StructField("mapping_id", IntegerType(), False),
         StructField("full_scientific_name", StringType(), False),
         StructField("full_scientific_name_id", StringType(), False),
         StructField("is_synonym", BooleanType(), False),
+        StructField("non_scientific_name", StringType(), False),
+        StructField("non_scientific_type", StringType(), False),
+    ]
+)
+
+OUTPUT_SCHEMA_V2 = StructType(
+    [
+        StructField("mapping_id", IntegerType(), False),
+        StructField("scientific_name_id", StringType(), False),
+        StructField("scientific_name", StringType(), False),
+        StructField("scientific_name_type", StringType(), False),
+        StructField("non_scientific_name_id", StringType(), False),
         StructField("non_scientific_name", StringType(), False),
         StructField("non_scientific_type", StringType(), False),
     ]

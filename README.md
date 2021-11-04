@@ -1,11 +1,64 @@
 # mpns-pipeline
 
-This part of the work is to produce static MPNS data for the NER pipeline. This pipeline itself is a one-off pipeline and is not meant to be re-run to produce new data.
+- [mpns-pipeline](#mpns-pipeline)
+  * [Setup & run instructions](#setup---run-instructions)
+    + [Installations](#installations)
+    + [Run this repo](#run-this-repo)
+    + [`inv` task breakdown](#-inv--task-breakdown)
+      - [`inv ps.build`](#-inv-psbuild-)
+      - [`inv ps.build-no-cache`](#-inv-psbuild-no-cache-)
+      - [`inv ps.mpns_v8_processing_run_v2`](#-inv-psmpns-v8-processing-run-v2-)
+      - [`inv test`](#-inv-test-)
+      - [`inv lint`](#-inv-lint-)
+    + [VSCode settings](#vscode-settings-)
 
-## Setup
 
-Recommendations:
-pyenv to run python
+This part of the work is to produce static MPNS data for the NER pipeline. This pipeline itself is a one-off pipeline and is not meant to be re-run to produce new data, unless a new version of MPNS is introduced.
+
+The code stages in this repo:
+- [A_mpns_v8_processing](src/A_mpns_v8_processing/README.md)
+- [B_stratify_mpns_name_mappings](src/B_stratify_mpns_name_mappings/README.md)
+- [C_create_labels_for_annotation](src/C_create_labels_for_annotation/README.md)
+
+The data stages in this repo:
+- **A_mpns_v8_processing:** The raw MPNS v8 datasets in `data/mpns/mpns_v8` folder are processed to `processed/mpns/mpns_v8/mpns_name_mappings/v2/scientific_name_type=...`
+    The entire repo and pipeline are designed to easily allow a new version of MPNS to be introduced.
+- **B_stratify_mpns_name_mappings:** This step might be moved to the NER pipeline.
+- **C_create_labels_for_annotation:** This is a very simple file of labels to be uploaded to the annotation tool, located at `data/reference/mpns_v8/annotation_labels.json`.
+
+Structure of the `data` directory:
+```
+data
+├── mpns
+│   ├── mpns_v8
+│   └── sample_mpns_v8
+├── processed
+│   └── mpns
+│       ├── mpns_v8
+│       │   └── mpns_name_mappings
+│       │       ├── v1
+│       │       ├── v2
+│       │       │   ├── scientific_name_type=plant
+│       │       │   ├── scientific_name_type=sci_cited_medicinal
+│       │       │   └── scientific_name_type=synonym
+│       │       └── v2_non_partitioned
+│       └── sample_mpns_v8
+│           └── mpns_name_mappings
+│               ├── v1
+│               └── v2
+└── reference
+    └── mpns_v8
+```
+
+More details on files are in [TREE.md](TREE.md).
+
+---
+
+## Setup & run instructions
+
+### Installation
+
+First, use `pyenv` to set Python version:
 ```bash
 pyenv update
 pyenv install --list
@@ -13,9 +66,7 @@ pyenv install 3.10.0
 pyenv local 3.10.0
 ```
 
-Virtual env to run tasks and tests:
-
-Namely, `invoke` and `pytest` libraries.
+Then create a virtual env to run tasks and tests - namely, `invoke` and `pytest` libraries.
 
 ```bash
 python3 -m venv venv
@@ -35,6 +86,10 @@ pip install -r ops_requirements.txt
 pyenv deactivate mpns-pipeline
 ```
 
+Install Docker and log in with credentials created on DockerHub.
+
+### Run this repo
+
 The base image is from: <https://hub.docker.com/r/godatadriven/pyspark>.
 
 The execution of all tasks in this repo are simplified using the `invoke` Python library. The available commands can be viewed by running:
@@ -50,7 +105,7 @@ To build the docker image, run:
 inv ps.build
 ```
 
-To rebuild instead of drawing from cache:
+To rebuild instead of drawing the base image from cache:
 ```bash
 inv ps.build-no-cache
 ```
@@ -60,9 +115,9 @@ To run the processing (the latest version is V2):
 inv ps.mpns_v8_processing_run_v2
 ```
 
-## `inv` task breakdown
+### `inv` task breakdown
 
-### `inv ps.build`
+#### `inv ps.build`
 
 Login to Docker and build the docker image from the Dockerfile.
 The following command names the image and tags it.
@@ -70,7 +125,7 @@ The following command names the image and tags it.
 docker build -t punchy/mpns-pipeline:0.1.0 .
 ```
 
-### `inv ps.build-no-cache`
+#### `inv ps.build-no-cache`
 To rebuild instead of drawing from cache:
 ```bash
 docker build --no-cache -t punchy/mpns-pipeline:0.1.0 .
@@ -81,7 +136,7 @@ Check that the necessary images were created. The repositories and tags we want 
 docker image ls
 ```
 
-### `inv ps.mpns_v8_processing_run_v2`
+#### `inv ps.mpns_v8_processing_run_v2`
 Make a docker volume, defining a `job` folder on it, and run the processing v2 on it.
 
 ```bash
@@ -99,17 +154,17 @@ docker run -v $(pwd):/job punchy/mpns-pipeline:0.1.0  \
     /main.py
 ```
 
-### `inv test`
+#### `inv test`
 
 Runs pytest in verbose mode.
 
 
-### `inv lint`
+#### `inv lint`
 
 Runs linting using `flake8` and `black`.
 
 
-## VSCode settings:
+### VSCode settings
 
 Create a `.vscode` folder and put the following into a `settings.json` file inside it.
 

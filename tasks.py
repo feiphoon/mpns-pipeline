@@ -4,7 +4,7 @@ from invoke import task, Collection
 @task
 def build(c):
     c.run(
-        "docker build -t punchy/ner-pipeline:0.1.0 -t punchy/ner-pipeline:latest .",
+        "docker build -t punchy/mpns-pipeline:0.1.0 -t punchy/mpns-pipeline:latest .",
         pty=True,
     )
 
@@ -12,7 +12,7 @@ def build(c):
 @task
 def build_no_cache(c):
     c.run(
-        "docker build --no-cache -t punchy/ner-pipeline:0.1.0 -t punchy/ner-pipeline:latest .",
+        "docker build --no-cache -t punchy/mpns-pipeline:0.1.0 -t punchy/mpns-pipeline:latest .",
         pty=True,
     )
 
@@ -20,9 +20,9 @@ def build_no_cache(c):
 @task
 def mpns_v8_processing_run_v1(c):
     c.run(
-        "docker run -v $(pwd):/job punchy/ner-pipeline:0.1.0 \
+        "docker run -v $(pwd):/job punchy/mpns-pipeline:0.1.0 \
             src/C_mpns_v8_processing/mpns_v8_processing_v1.py \
-            --name 'ner-pipeline-container'\
+            --name 'mpns-pipeline-container'\
                 ;CONTAINER_ID=$(docker ps -lq)\
                     ;docker cp `echo $CONTAINER_ID`:/data/processed/mpns/ data/processed/",
         pty=True,
@@ -32,9 +32,9 @@ def mpns_v8_processing_run_v1(c):
 @task
 def mpns_v8_processing_run_v2(c):
     c.run(
-        "docker run -v $(pwd):/job punchy/ner-pipeline:0.1.0 \
+        "docker run -v $(pwd):/job punchy/mpns-pipeline:0.1.0 \
             src/C_mpns_v8_processing/mpns_v8_processing_v2.py \
-            --name 'ner-pipeline-container'\
+            --name 'mpns-pipeline-container'\
                 ;CONTAINER_ID=$(docker ps -lq)\
                     ;docker cp `echo $CONTAINER_ID`:/data/processed/mpns data/processed/",
         pty=True,

@@ -1,4 +1,4 @@
-# E: Create Labels for annotation
+# C: Create Labels for annotation
 
 This is to create labels for annotation with doccano in the NER pipeline. No code is required here as I created the labels my hand - they are at <data/reference/mpns_v8/annotation_labels.json>.
 

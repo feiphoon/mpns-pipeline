@@ -1,4 +1,4 @@
-# C: MPNS v8 Processing
+# A: MPNS v8 Processing
 
 This stage is to process the MPNS v8 data into a name mappings JSON file. This process is not part of the normal abstract retrieval run because this should only be done **once** after receiving a version of data.
 

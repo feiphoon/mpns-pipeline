@@ -1,4 +1,4 @@
-# D: Stratify MPNS name mappings
+# B: Stratify MPNS name mappings
 
 This stage is to pick some sets of name mappings to give a good base and balance of scientific to non-scientific name type mappings. The previous stage produced over 3 million name mappings to work with.
 
@@ -11,7 +11,7 @@ The input data comes from `data/processed/mpns/mpns_v8/mpns_name_mappings/v2/`. 
 
 This allows us to have a good selection of "scientific" names against common & pharmaceutical names, that we can pick from for synthetic annotation.
 
-Te following is the data schema represented in JSON format (`scientific_name_type` actually appears as partitions - so the data has to be read into Spark for them to appear this way):
+The following is the data schema represented in JSON format (`scientific_name_type` actually appears as partitions - so the data has to be read into Spark for them to appear this way):
 
 ```json
 {

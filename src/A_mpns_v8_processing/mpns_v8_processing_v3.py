@@ -1,4 +1,5 @@
 import os
+import json
 from functools import reduce
 from pathlib import Path
 from typing import List, Tuple
@@ -144,6 +145,10 @@ def process_mpns_v8_raw(
     write_name_mappings_to_file(
         df=all_name_mappings_df, output_filepath=output_filepath, sample_run=sample_run
     )
+
+    # print(all_name_mappings_df.show(truncate=False))
+
+    write_process_metadata(df=all_name_mappings_df, output_filepath=output_filepath)
 
 
 def load_for_schema(
@@ -413,3 +418,26 @@ def write_name_mappings_to_file(
         df.repartition(5).write.mode("overwrite").option(
             "schema", OUTPUT_SCHEMA_V3
         ).partitionBy("scientific_name_type").parquet(output_filepath)
+
+
+def write_process_metadata(df: DataFrame, output_filepath: Path) -> None:
+    total_count: int = df.count()
+    plant_name_count: int = df.filter(f.col("scientific_name_type") == "plant").count()
+    synonym_name_count: int = df.filter(
+        f.col("scientific_name_type") == "synonym"
+    ).count()
+    sci_cited_medicinal_name_count: int = df.filter(
+        f.col("scientific_name_type") == "sci_cited_medicinal"
+    ).count()
+
+    _metadata = {
+        "total_count": total_count,
+        "plant_name_count": plant_name_count,
+        "synonym_name_count": synonym_name_count,
+        "sci_cited_medicinal_name_count": sci_cited_medicinal_name_count,
+    }
+
+    with Path(f"{output_filepath}/process_metadata.json").open(
+        "w", encoding="utf-8"
+    ) as file:
+        json.dump(_metadata, file)

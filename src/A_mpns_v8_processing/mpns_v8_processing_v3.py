@@ -1,11 +1,12 @@
 import os
+from functools import reduce
 from pathlib import Path
-from typing import List
 
 from pyspark.sql import SparkSession, functions as f
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.types import StructType
 
+from pyspark.sql.window import Window
 
 from input_schemas import (
     MPNS_V8_PLANTS,
@@ -90,6 +91,30 @@ def process_mpns_v8_raw(
     # print(
     #     sci_cited_medicinal_to_common_and_pharmaceutical_names_df.show(truncate=False)
     # )
+
+    # Group name mappings
+    plants_to_common_and_pharmaceutical_names_df = (
+        plants_to_common_and_pharmaceutical_names_df.transform(group_name_mappings)
+    )
+
+    synonyms_to_common_and_pharmaceutical_names_df = (
+        synonyms_to_common_and_pharmaceutical_names_df.transform(group_name_mappings)
+    )
+
+    sci_cited_medicinal_to_common_and_pharmaceutical_names_df = (
+        sci_cited_medicinal_to_common_and_pharmaceutical_names_df.transform(
+            group_name_mappings
+        )
+    )
+
+    # Join all three name mappings DataFrames for everything
+    _dfs_to_union: list = [
+        plants_to_common_and_pharmaceutical_names_df,
+        synonyms_to_common_and_pharmaceutical_names_df,
+        sci_cited_medicinal_to_common_and_pharmaceutical_names_df,
+    ]
+
+    all_name_mappings_df: DataFrame = reduce(DataFrame.union, _dfs_to_union)
 
 
 def load_for_schema(
@@ -285,4 +310,41 @@ def construct_name_mappings_df(df: DataFrame, scientific_name_type: str) -> Data
         .withColumnRenamed("name", "non_scientific_name")
         .withColumnRenamed("name_type", "non_scientific_name_type")
         .withColumn("scientific_name_type", f.lit(scientific_name_type))
+    )
+
+
+def group_name_mappings(df: DataFrame) -> DataFrame:
+    grouped_df: DataFrame = (
+        df.withColumn(
+            "non_scientific_names",
+            f.struct(
+                "non_scientific_name_type",
+                "non_scientific_name",
+                "non_scientific_name_id",
+            ),
+        )
+        .groupBy("scientific_name")
+        .agg(
+            f.collect_list(f.col("non_scientific_names")).alias("non_scientific_names")
+        )
+        .orderBy("scientific_name")
+    )
+
+    schema: list = [
+        "scientific_name",
+        "scientific_name_id",
+        "scientific_name_type",
+        "non_scientific_names",
+    ]
+
+    df = df.drop(
+        "non_scientific_name", "non_scientific_name_id", "non_scientific_name_type"
+    )
+
+    return (
+        grouped_df.join(
+            df, on=(grouped_df.scientific_name == df.scientific_name), how="left"
+        )
+        .drop(df.scientific_name)
+        .select(*schema)
     )

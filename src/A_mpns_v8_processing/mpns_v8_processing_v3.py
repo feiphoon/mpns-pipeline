@@ -1,18 +1,26 @@
 import os
 from functools import reduce
 from pathlib import Path
+from typing import List, Tuple
 
 from pyspark.sql import SparkSession, functions as f
 from pyspark.sql.dataframe import DataFrame
-from pyspark.sql.types import StructType
-
 from pyspark.sql.window import Window
+from pyspark.sql.types import StructType, IntegerType
 
 from input_schemas import (
     MPNS_V8_PLANTS,
     MPNS_V8_SYNONYMS,
     MPNS_V8_NON_SCIENTIFIC_NAMES,
 )
+
+
+#  Monkeypatch in case I don't use Spark 3.0
+def transform(self, f):
+    return f(self)
+
+
+DataFrame.transform = transform
 
 
 def process_mpns_v8_raw(
@@ -115,6 +123,19 @@ def process_mpns_v8_raw(
     ]
 
     all_name_mappings_df: DataFrame = reduce(DataFrame.union, _dfs_to_union)
+
+    # Add a unique mapping_id - won't be deterministic with each run!
+    all_name_mappings_df: DataFrame = (
+        all_name_mappings_df.withColumn(
+            "mapping_id",
+            f.row_number().over(Window.orderBy("scientific_name")),
+        )
+        .transform(add_non_scientific_name_count)
+        .transform(lambda df: add_non_scientific_name_count_by_type(df, "common"))
+        .transform(
+            lambda df: add_non_scientific_name_count_by_type(df, "pharmaceutical")
+        )
+    )
 
 
 def load_for_schema(
@@ -347,4 +368,22 @@ def group_name_mappings(df: DataFrame) -> DataFrame:
         )
         .drop(df.scientific_name)
         .select(*schema)
+    )
+
+
+def add_non_scientific_name_count(df: DataFrame) -> DataFrame:
+    return df.withColumn("non_scientific_name_count", f.size("non_scientific_names"))
+
+
+def count_target_type(names: List[Tuple[str, str, str]], target_type: str) -> int:
+    return list(zip(*names))[0].count(target_type)
+
+
+count_target_type_udf = f.udf(count_target_type, IntegerType())
+
+
+def add_non_scientific_name_count_by_type(df: DataFrame, target_type: str) -> DataFrame:
+    return df.withColumn(
+        f"{target_type}_name_count",
+        count_target_type_udf(f.col("non_scientific_names", target_type)),
     )

@@ -41,14 +41,14 @@ OUTPUT_SCHEMA_V3 = StructType(
             ArrayType(
                 StructType(
                     [
+                        StructField("non_scientific_type", StringType(), False),
                         StructField("non_scientific_name", StringType(), False),
                         StructField("non_scientific_name_id", StringType(), False),
-                        StructField("non_scientific_type", StringType(), False),
                     ]
                 ),
-                False,
+                True,
             ),
-            False,
+            True,
         ),
         StructField("non_scientific_name_count", IntegerType(), False),
         StructField("common_name_count", IntegerType(), True),

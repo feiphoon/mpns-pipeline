@@ -14,6 +14,8 @@ from input_schemas import (
     MPNS_V8_NON_SCIENTIFIC_NAMES,
 )
 
+from output_schemas import OUTPUT_SCHEMA_V3
+
 
 #  Monkeypatch in case I don't use Spark 3.0
 def transform(self, f):
@@ -25,10 +27,10 @@ DataFrame.transform = transform
 
 def process_mpns_v8_raw(
     input_filepath: Path,
-    # output_filepath: Path,
+    output_filepath: Path,
     exclude_quality_rating: List[str],
     exclude_taxon_status: List[str],
-    # sample_run: bool,
+    sample_run: bool,
 ) -> None:
     spark = SparkSession.builder.appName("process_mpns_v8_raw").getOrCreate()
 
@@ -136,6 +138,11 @@ def process_mpns_v8_raw(
         .transform(
             lambda df: add_non_scientific_name_count_by_type(df, "pharmaceutical")
         )
+    )
+
+    # Write name mappings to JSON or parquet files
+    write_name_mappings_to_file(
+        df=all_name_mappings_df, output_filepath=output_filepath, sample_run=sample_run
     )
 
 
@@ -388,3 +395,21 @@ def add_non_scientific_name_count_by_type(df: DataFrame, target_type: str) -> Da
         f"{target_type}_name_count",
         count_target_type_udf(f.col("non_scientific_names"), f.lit(target_type)),
     )
+
+
+def write_name_mappings_to_file(
+    df: DataFrame, output_filepath: str, sample_run: bool
+) -> None:
+    output_filepath_path: Path = Path(output_filepath).parents[0]
+    output_filepath_path.mkdir(parents=True, exist_ok=True)
+    if sample_run:
+        # Coalesce to 1 JSON file for sample demonstration
+        df.coalesce(1).write.format("json").mode("overwrite").option(
+            "schema", OUTPUT_SCHEMA_V3
+        ).save(output_filepath)
+
+    else:
+        # Repartition to ballpark of 5 parquet files for real data
+        df.repartition(5).write.mode("overwrite").option(
+            "schema", OUTPUT_SCHEMA_V3
+        ).partitionBy("scientific_name_type").parquet(output_filepath)

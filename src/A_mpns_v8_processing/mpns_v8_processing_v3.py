@@ -124,7 +124,8 @@ def process_mpns_v8_raw(
 
     all_name_mappings_df: DataFrame = reduce(DataFrame.union, _dfs_to_union)
 
-    # Add a unique mapping_id - won't be deterministic with each run!
+    # Add a unique mapping_id - won't be deterministic with each run.
+    # Then add some name counts
     all_name_mappings_df: DataFrame = (
         all_name_mappings_df.withColumn(
             "mapping_id",
@@ -339,9 +340,9 @@ def group_name_mappings(df: DataFrame) -> DataFrame:
         df.withColumn(
             "non_scientific_names",
             f.struct(
-                "non_scientific_name_type",
                 "non_scientific_name",
                 "non_scientific_name_id",
+                "non_scientific_name_type",
             ),
         )
         .groupBy("scientific_name")
@@ -376,7 +377,7 @@ def add_non_scientific_name_count(df: DataFrame) -> DataFrame:
 
 
 def count_target_type(names: List[Tuple[str, str, str]], target_type: str) -> int:
-    return list(zip(*names))[0].count(target_type)
+    return list(zip(*names))[2].count(target_type)
 
 
 count_target_type_udf = f.udf(count_target_type, IntegerType())
@@ -385,5 +386,5 @@ count_target_type_udf = f.udf(count_target_type, IntegerType())
 def add_non_scientific_name_count_by_type(df: DataFrame, target_type: str) -> DataFrame:
     return df.withColumn(
         f"{target_type}_name_count",
-        count_target_type_udf(f.col("non_scientific_names", target_type)),
+        count_target_type_udf(f.col("non_scientific_names"), f.lit(target_type)),
     )

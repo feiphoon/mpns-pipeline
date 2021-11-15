@@ -441,3 +441,29 @@ def write_process_metadata(df: DataFrame, output_filepath: Path) -> None:
         "w", encoding="utf-8"
     ) as file:
         json.dump(_metadata, file)
+
+
+# TODO: Use argparse to pass sample_run as a flag to container.
+
+# These are here for demonstration purposes
+sample_mpns_raw_filepath = "data/mpns/sample_mpns_v8/"
+sample_mpns_processed_filepath = (
+    "data/processed/mpns/sample_mpns_v8/mpns_name_mappings/v3/"
+)
+process_mpns_v8_raw(
+    input_filepath=sample_mpns_raw_filepath,
+    output_filepath=sample_mpns_processed_filepath,
+    exclude_quality_rating=["L"],
+    exclude_taxon_status=["Misapplied"],
+    sample_run=True,
+)
+
+# mpns_raw_filepath = "data/mpns/mpns_v8/"
+# mpns_processed_filepath = "data/processed/mpns/mpns_v8/mpns_name_mappings/v3/"
+# process_mpns_v8_raw(
+#     input_filepath=mpns_raw_filepath,
+#     output_filepath=mpns_processed_filepath,
+#     exclude_quality_rating=["L"],
+#     exclude_taxon_status=["Misapplied"],
+#     sample_run=False,
+# )

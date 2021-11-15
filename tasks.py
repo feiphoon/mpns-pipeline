@@ -21,7 +21,7 @@ def build_no_cache(c):
 def mpns_v8_processing_run_v1(c):
     c.run(
         "docker run -v $(pwd):/job punchy/mpns-pipeline:0.1.0 \
-            src/C_mpns_v8_processing/mpns_v8_processing_v1.py \
+            src/A_mpns_v8_processing/mpns_v8_processing_v1.py \
             --name 'mpns-pipeline-container'\
                 ;CONTAINER_ID=$(docker ps -lq)\
                     ;docker cp `echo $CONTAINER_ID`:/data/processed/mpns/ data/processed/",
@@ -33,7 +33,19 @@ def mpns_v8_processing_run_v1(c):
 def mpns_v8_processing_run_v2(c):
     c.run(
         "docker run -v $(pwd):/job punchy/mpns-pipeline:0.1.0 \
-            src/C_mpns_v8_processing/mpns_v8_processing_v2.py \
+            src/A_mpns_v8_processing/mpns_v8_processing_v2.py \
+            --name 'mpns-pipeline-container'\
+                ;CONTAINER_ID=$(docker ps -lq)\
+                    ;docker cp `echo $CONTAINER_ID`:/data/processed/mpns data/processed/",
+        pty=True,
+    )
+
+
+@task
+def mpns_v8_processing_run_v3(c):
+    c.run(
+        "docker run -v $(pwd):/job punchy/mpns-pipeline:0.1.0 \
+            src/A_mpns_v8_processing/mpns_v8_processing_v3.py \
             --name 'mpns-pipeline-container'\
                 ;CONTAINER_ID=$(docker ps -lq)\
                     ;docker cp `echo $CONTAINER_ID`:/data/processed/mpns data/processed/",
@@ -48,6 +60,7 @@ ps.add_task(build)
 ps.add_task(build_no_cache)
 ps.add_task(mpns_v8_processing_run_v1)
 ps.add_task(mpns_v8_processing_run_v2)
+ps.add_task(mpns_v8_processing_run_v3)
 ns.add_collection(ps)
 
 

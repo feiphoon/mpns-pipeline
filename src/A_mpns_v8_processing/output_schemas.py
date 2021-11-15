@@ -32,7 +32,7 @@ OUTPUT_SCHEMA_V2 = StructType(
 
 OUTPUT_SCHEMA_V3 = StructType(
     [
-        StructField("mapping_id", IntegerType, False),
+        StructField("mapping_id", IntegerType(), False),
         StructField("scientific_name", StringType(), False),
         StructField("scientific_name_id", StringType(), False),
         StructField("scientific_name_type", StringType(), False),

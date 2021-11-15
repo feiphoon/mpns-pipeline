@@ -1,0 +1,26 @@
+[
+    {
+        "scientific_name_id": "id_1",
+        "scientific_name": "Bellis perennis L.",
+        "scientific_name_type": "plant",
+        "non_scientific_name_id": "non_id_1",
+        "non_scientific_name": "common daisy",
+        "non_scientific_name_type": "common"
+    },
+    {
+        "scientific_name_id": "id_1",
+        "scientific_name": "Bellis perennis L.",
+        "scientific_name_type": "plant",
+        "non_scientific_name_id": "non_id_2",
+        "non_scientific_name": "pharma daisy",
+        "non_scientific_name_type": "pharmaceutical"
+    },
+    {
+        "scientific_name_id": "id_1",
+        "scientific_name": "Bellis perennis L.",
+        "scientific_name_type": "plant",
+        "non_scientific_name_id": "non_id_3",
+        "non_scientific_name": "pharma daisy again",
+        "non_scientific_name_type": "pharmaceutical"
+    }
+]

@@ -1,0 +1,28 @@
+{
+    "mapping_id": 1,
+    "scientific_name_id": "potato",
+    "scientific_name": "potato",
+    "scientific_name_type": "potato",
+    "non_scientific_names": [
+        {
+            "non_scientific_name_id": "potato",
+            "non_scientific_name": "potato",
+            "non_scientific_type": "potato"
+        },
+        {
+            "non_scientific_name_id": "potato",
+            "non_scientific_name": "イ エロ－ターミナリア",
+            "non_scientific_type": "potato"
+        },
+        {
+            "non_scientific_name_id": "potato",
+            "non_scientific_name": "Citrus grandis \"Tomentosa\"",
+            "non_scientific_type": "potato"
+        },
+        {
+            "non_scientific_name_id": "potato",
+            "non_scientific_name": "Clarkia purpurea (W. Curtis) A. Nelson & J.F. Macbr.",
+            "non_scientific_type": "potato"
+        }
+    ]
+}

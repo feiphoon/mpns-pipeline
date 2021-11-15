@@ -373,7 +373,7 @@ def group_name_mappings(df: DataFrame) -> DataFrame:
 
     df = df.drop(
         "non_scientific_name", "non_scientific_name_id", "non_scientific_name_type"
-    )
+    ).distinct()
 
     return (
         grouped_df.join(

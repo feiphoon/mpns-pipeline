@@ -9,7 +9,6 @@ from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.window import Window
 from pyspark.sql.types import StructType
 
-
 from input_schemas import (
     MPNS_V8_PLANTS,
     MPNS_V8_SYNONYMS,
@@ -119,7 +118,7 @@ def process_mpns_v8_raw(
         f.row_number().over(Window.orderBy("scientific_name")),
     )
 
-    # Write name mappings to JSON files
+    # Write name mappings to JSON or parquet files
     write_name_mappings_to_file(
         df=all_name_mappings_df, output_filepath=output_filepath, sample_run=sample_run
     )

@@ -114,7 +114,12 @@ class TestBotanicalVarietyRegex:
 
 
 class TestCultivarGroupRegex:
-    """Not present in MPNS."""
+    """
+    Not present in MPNS Plants or Synonyms - present in
+    Non-Scientific Names/sci_cited_medicinal - as "cv. Group" and "Group".
+    These are not defined to standard so we will stick with counting to the
+    standard given here.
+    """
 
     @pytest.mark.parametrize(
         "input",
@@ -128,7 +133,10 @@ class TestCultivarGroupRegex:
 
 
 class TestCultivarRegex:
-    """Not present in MPNS."""
+    """
+    Not present in MPNS Plants or Synonyms - present in
+    Non-Scientific Names/sci_cited_medicinal.
+    """
 
     @pytest.mark.parametrize(
         "input",

@@ -1,7 +1,7 @@
 import re
 import pytest
 
-from src.helpers.botanical_name_regexes import *
+from src.helpers.botanical_name_regexes import BotanicalNameRegexes
 
 
 class TestSpeciesRegex:
@@ -16,7 +16,7 @@ class TestSpeciesRegex:
         ],
     )
     def test_species_regex__success(self, input):
-        assert re.match(SPECIES_REGEX, input)
+        assert re.match(BotanicalNameRegexes.SPECIES_REGEX.value, input)
 
     # def test_species_regex__fail(self):
     #     """
@@ -39,7 +39,7 @@ class TestSpeciesAggregateRegex:
         ],
     )
     def test_species_aggregate_regex(self, input):
-        assert re.match(SPECIES_AGGREGATE_REGEX, input)
+        assert re.match(BotanicalNameRegexes.SPECIES_AGGREGATE_REGEX.value, input)
 
 
 class TestIntergenericHybridRegex:
@@ -56,7 +56,7 @@ class TestIntergenericHybridRegex:
         ],
     )
     def test_intergeneric_hybrid_regex(self, input):
-        assert re.match(INTERGENERIC_HYBRID_REGEX, input)
+        assert re.match(BotanicalNameRegexes.INTERGENERIC_HYBRID_REGEX.value, input)
 
 
 class TestInterspecificHybridRegex:
@@ -71,14 +71,14 @@ class TestInterspecificHybridRegex:
         ],
     )
     def test_interspecific_hybrid_regex(self, input):
-        assert re.match(INTERSPECIFIC_HYBRID_REGEX, input)
+        assert re.match(BotanicalNameRegexes.INTERSPECIFIC_HYBRID_REGEX.value, input)
 
     # def test_interspecific_hybrid_regex__full_name(self):
     #     """
     #     This example could not be found in the MPNS - it's from the paper. So will be excluded.
     #     """
     #     assert re.match(
-    #         INTERSPECIFIC_HYBRID_FULL_NAME_REGEX, "Primula veris × vulgaris"
+    #         BotanicalNameRegexes.INTERSPECIFIC_HYBRID_FULL_NAME_REGEX.value, "Primula veris × vulgaris"
     #     )
 
 
@@ -93,7 +93,7 @@ class TestSubspeciesRegex:
         ],
     )
     def test_subspecies_regex(self, input):
-        assert re.match(SUBSPECIES_REGEX, input)
+        assert re.match(BotanicalNameRegexes.SUBSPECIES_REGEX.value, input)
 
 
 class TestBotanicalVarietyRegex:
@@ -108,7 +108,7 @@ class TestBotanicalVarietyRegex:
         ],
     )
     def test_botanical_variety_regex(self, input):
-        assert re.match(BOTANICAL_VARIETY_REGEX, input)
+        assert re.match(BotanicalNameRegexes.BOTANICAL_VARIETY_REGEX.value, input)
 
 
 class TestCultivarGroupRegex:
@@ -122,7 +122,7 @@ class TestCultivarGroupRegex:
         ],
     )
     def test_cultivar_group_regex(self, input):
-        assert re.match(CULTIVAR_GROUP_REGEX, input)
+        assert re.match(BotanicalNameRegexes.CULTIVAR_GROUP_REGEX.value, input)
 
 
 class TestCultivarRegex:
@@ -139,4 +139,4 @@ class TestCultivarRegex:
         ],
     )
     def test_cultivar_regex(self, input):
-        assert re.match(CULTIVAR_REGEX, input)
+        assert re.match(BotanicalNameRegexes.CULTIVAR_REGEX.value, input)

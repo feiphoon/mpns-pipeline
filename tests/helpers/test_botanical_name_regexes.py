@@ -1,7 +1,9 @@
 import re
 import pytest
 
-from src.helpers.botanical_name_regexes import BotanicalNameRegexes
+from src.D_mpns_v8_botanical_name_analysis.botanical_name_regexes import (
+    BotanicalNameRegexes,
+)
 
 
 class TestSpeciesRegex:

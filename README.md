@@ -7,7 +7,7 @@
     + [`inv` task breakdown](#-inv--task-breakdown)
       - [`inv ps.build`](#-inv-psbuild-)
       - [`inv ps.build-no-cache`](#-inv-psbuild-no-cache-)
-      - [`inv ps.mpns_v8_processing_run_v2`](#-inv-psmpns-v8-processing-run-v2-)
+      - [`inv ps.mpns_v8_processing_run_v3`](#-inv-psmpns-v8-processing-run-v3-)
       - [`inv test`](#-inv-test-)
       - [`inv lint`](#-inv-lint-)
     + [VSCode settings](#vscode-settings-)
@@ -136,8 +136,8 @@ Check that the necessary images were created. The repositories and tags we want 
 docker image ls
 ```
 
-#### `inv ps.mpns_v8_processing_run_v2`
-Make a docker volume, defining a `job` folder on it, and run the processing v2 on it.
+#### `inv ps.mpns_v8_processing_run_v3`
+Make a docker volume, defining a `job` folder on it, and run the processing of v3 on it.
 
 ```bash
 docker run -v $(pwd):/job punchy/mpns-pipeline:0.1.0 [options] /main.py [app arguments]

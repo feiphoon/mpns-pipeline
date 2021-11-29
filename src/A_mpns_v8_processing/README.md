@@ -15,6 +15,155 @@ This stage was done in Spark because, in descending order of importance
 Two processing versions are available at this stage - this was because of improvements. The one in use will be v3; v1 & v2 have been kept for posterity and will be useful to explain the evolution of this process.
 
 
+## Processing V4
+
+### Transformations in a run
+
+1. The Plants, Synonyms and Non-Scientific Names datasets are loaded against their respected schemas from `data/mpns/mpns_v8`:
+    - `medicinal_mpns_plants.csv`
+    - `medicinal_mpns_synonyms.csv`
+    - `medicinal_mpns_non_scientific_names.csv`
+1. The "Low" (`L`) quality rating and "Misapplied" (`Misapplied`) taxanomy status entries are filtered out from the Plants and Synonyms datasets.
+1. The `common` & `pharmaceutical` names in the Non-Scientific Name dataset are separated from the `sci_cited_medicinal` entries.
+1. Each of the main items in the Plants, Synonyms and Sci-Cited-Medicinal datasets are matched against any entries in the Common & Pharmaceutical Name datasets, which produces an exploded mapping of the former names to the names in the latter.
+1. The three name mapping datasets are unioned and each row is given a **contiguous unique numerical ID** as a `mapping_id`. This is an important detail as providing a unique numerical ID in Spark is normally done with `monotonically_increasing_id`, that allows for efficient execution across distributed workers, but it does not produce a contiguous sequence, which may be confusing and later on troublesome during shuffling and splitting the mappings dataset for train/validation/test. This is instead done by the `row_number` Windowing function. However as no partition could be specified for this statement, there is a risk of running out of memory during this operation if the input data is large enough. It is important to note also that neither of these methods are deterministic, so the generation of the `mapping_id` is not idempotent.
+1. The resulting `mpns_name_mappings` dataset is repartitioned to several parquet files (against an output schema) and output at `data/processed/mpns/mpns_v8/mpns_name_mappings/v2/`. The output is partitioned by `scientific_name_type`, so `plant`, `synonym` & `sci_cited_medicinal` folders are produced. It will make it easier to manage mappings for training later.
+1. A `processing_metadata.json` file is also produced with counts on the mappings (see last part of this v2 section).
+
+### Executing a test run
+
+There are sample datasets at `data/mpns/sample_mpns_v8/v2`. These files contain a select sample of items (all linked to the same 1 plant) from the real datasets, and only exist for demonstration purposes.
+- `medicinal_mpns_plants.csv`: 3 rows, only 1 of which should pass the filter
+- `medicinal_mpns_synonyms.csv`: 6 rows, only 4 of which should pass the filter
+- `medicinal_mpns_non_scientific_names.csv`: 7 rows, which are split into `common` & `pharmaceutical` names, and `sci_cited_medicinal` names. Only the latter are filtered. joined to matches against the total of 5 records from the first two datasets.
+    - `common`: 5
+    - `pharmaceutical`: 0
+    - `sci_cited_medicinal`: 3
+
+After filtering and joining, this produces the resulting `mpns_name_mappings` (at `data/processed/mpns/sample_mpns_v8/mpns_name_mappings/v2/`) of 32 rows. (No automated tests were written for this to demonstrate it).
+
+To run this for demonstration purposes, go to `src/C_mpns_v8_processing/mpns_v8_processing_v2.py`, uncomment the relevant block of filepaths and code for the sample runs in the statements at the bottom of the file (comment out the real run). Sample data is **coalesced to 1 file**.
+
+Then run:
+```bash
+inv ps.build-no-cache;inv ps.sample-mpns-v8-processing-run-v4
+```
+
+### Executing an actual run
+
+To run this for actual reprocessing, go to `src/C_mpns_v8_processing/mpns_v8_processing_v4.py`, , uncomment the relevant block of filepaths and code for the real runs in the statements at the bottom of the file (comment out the sample run). Real data is **repartitioned to 5 files and compressed to gzip format**.
+
+Then run:
+```bash
+inv ps.build-no-cache;inv ps.mpns-v8-processing-run-v4
+```
+
+### Schemas
+
+#### Input:
+
+##### `medicinal_mpns_plants.csv`
+
+
+| name_id      | ipni_id  | taxon_status | quality_rating | rank    | family     | genus      | genus_hybrid | species  | species_hybrid | infra_species | parent_author | primary_author | full_scientific_name     |
+|--------------|----------|--------------|----------------|---------|------------|------------|--------------|----------|----------------|---------------|---------------|----------------|--------------------------|
+| wcsCmp922692 | 184409-1 | Accepted     | H              | species | Asteraceae | Bellis     | null         | perennis | null           | null          | null          | L.             | Bellis perennis L.       |
+| wcsCmp672852 | 703219-1 | Accepted     | L              | species | Proteaceae | Bellendena | null         | montana  | null           | null          | null          | R.Br.          | Bellendena montana R.Br. |
+| wcsCmp672852 | 703219-1 | Misapplied   | H              | species | Proteaceae | Bellendena | null         | montana  | null           | null          | null          | R.Br.          | Bellendena montana R.Br. |
+
+
+
+##### `medicinal_mpns_synonyms.csv`
+
+
+| name_id      | ipni_id  | taxon_status | quality_rating | rank    | genus  | genus_hybrid | species   | species_hybrid | infra_species | parent_author | primary_author     | full_scientific_name             | acc_name_id  |
+|--------------|----------|--------------|----------------|---------|--------|--------------|-----------|----------------|---------------|---------------|--------------------|----------------------------------|--------------|
+| wcsCmp922693 | 184363-1 | Synonym      | M              | species | Bellis | null         | armena    | null           | null          | null          | Boiss.             | Bellis armena Boiss.             | wcsCmp922692 |
+| wcsCmp922694 | 184383-1 | Synonym      | M              | species | Bellis | null         | hortensis | null           | null          | null          | Mill.              | Bellis hortensis Mill.           | wcsCmp922692 |
+| wcsCmp922695 | 184384-1 | Synonym      | M              | species | Bellis | null         | hybrida   | null           | null          | null          | Ten.               | Bellis hybrida Ten.              | wcsCmp922692 |
+| wcsCmp922696 | 184413-1 | Synonym      | M              | species | Bellis | null         | pumila    | null           | null          | null          | Arv.-Touv. & Dupuy | Bellis pumila Arv.-Touv. & Dupuy | wcsCmp922692 |
+| wcsCmp922693 | 184363-1 | Synonym      | L              | species | Bellis | null         | armena    | null           | null          | null          | Boiss.             | Bellis armena Boiss.             | wcsCmp922692 |
+| wcsCmp922693 | 184363-1 | Misapplied   | M              | species | Bellis | null         | armena    | null           | null          | null          | Boiss.             | Bellis armena Boiss.             | wcsCmp922692 |
+
+
+##### `medicinal_mpns_non_scientific_names.csv`
+
+| name_type           | name                     | plant_id     | name_id      |
+|---------------------|--------------------------|--------------|--------------|
+| common              | bellide                  | wcsCmp922692 | wcsCmp922692 |
+| common              | belliric myrobalan       | wcsCmp431540 | wcsCmp431540 |
+| common              | bellis perennis          | wcsCmp922692 | wcsCmp922692 |
+| sci_cited_medicinal | Bellis perennis          | wcsCmp922692 | wcsCmp922692 |
+| sci_cited_medicinal | Bellis perennis L.       | wcsCmp922692 | wcsCmp922692 |
+| sci_cited_medicinal | Bellis perennis Linnaeus | wcsCmp922692 | wcsCmp922692 |
+| common              | chu ju                   | wcsCmp922692 | wcsCmp922692 |
+| common              | common daisy             | wcsCmp922692 | wcsCmp922692 |
+
+
+#### Output
+
+##### v4 `mpns_name_mappings/*.parquet`
+
+The following parquet format can be observed in the real data run:
+
+| scientific_name_id | scientific_name       | non_scientific_name_id | non_scientific_name | non_scientific_name_type | scientific_name_type | mapping_id | scientific_name_length | non_scientific_name_length |
+|--------------------|-----------------------|------------------------|---------------------|--------------------------|----------------------|------------|------------------------|----------------------------|
+| wcsCmp922693       | Bellis armena Boiss.  | wcsCmp922692           | common daisy        | common                   | synonym              | 1          | 20                     | 12                         |
+| wcsCmp922693       | Bellis armena Boiss.  | wcsCmp922692           | chu ju              | common                   | synonym              | 2          | 20                     | 6                          |
+| wcsCmp922693       | Bellis armena Boiss.  | wcsCmp922692           | bellis perennis     | common                   | synonym              | 3          | 20                     | 15                         |
+| wcsCmp922693       | Bellis armena Boiss.  | wcsCmp922692           | bellide             | common                   | synonym              | 4          | 20                     | 7                          |
+| wcsCmp922692       | Bellis perennis       | wcsCmp922692           | common daisy        | common                   | sci_cited_medicinal  | 13         | 15                     | 12                         |
+| wcsCmp922692       | Bellis perennis       | wcsCmp922692           | chu ju              | common                   | sci_cited_medicinal  | 14         | 15                     | 6                          |
+| wcsCmp922692       | Bellis perennis       | wcsCmp922692           | bellis perennis     | common                   | sci_cited_medicinal  | 15         | 15                     | 15                         |
+| wcsCmp922692       | Bellis perennis       | wcsCmp922692           | bellide             | common                   | sci_cited_medicinal  | 16         | 15                     | 7                          |
+| wcsCmp922692       | Bellis perennis L.    | wcsCmp922692           | common daisy        | common                   | plant                | 17         | 18                     | 12                         |
+| wcsCmp922692       | Bellis perennis L.    | wcsCmp922692           | chu ju              | common                   | plant                | 18         | 18                     | 6                          |
+| wcsCmp922692       | Bellis perennis L.    | wcsCmp922692           | bellis perennis     | common                   | plant                | 19         | 18                     | 15                         |
+| wcsCmp922692       | Bellis perennis L.    | wcsCmp922692           | bellide             | common                   | plant                | 20         | 18                     | 7                          |
+
+
+JSON representation for easier reading (can be observed in the sample run):
+
+```json
+{
+    "scientific_name_id": "wcsCmp922693", // This was from the synonym name_id
+    "scientific_name": "Bellis armena Boiss.",
+    "scientific_name_type": "synonym",
+    "scientific_name_length": 20,
+    "non_scientific_name_id": "wcsCmp922692", // This was from the non_scientific_name name_id
+    "non_scientific_name": "common daisy",
+    "non_scientific_name_type": "common",
+    "non_scientific_name_length": 12,
+    "mapping_id": 1
+}
+```
+
+
+##### v4 `processing_metadata.json`
+
+Example:
+
+```json
+{
+    "total_count": 35,
+    "synonym_name_count": 28,
+    "plant_name_count": 7,
+    "common_name_count": 20,
+    "pharmaceutical_name_count": 0,
+    "sci_cited_medicinal_name_count": 15
+}
+```
+
+-----------
+
+## Processing V3
+
+No documentation - the only difference between this version and the previous V2 version, is that the
+non_scientific_names are grouped under each scientific name. This version is no longer used as despite being richer,
+the unexploded format made it harder to work with in the NER pipeline.
+
+-----------
+
 ## Processing V2
 
 ### Transformations in a run

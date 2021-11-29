@@ -1,3 +1,8 @@
+"""
+Note that a processing v4 has since been made, but this analysis method is still correct. This is because v3 grouped the
+mappings, and v4 contains exploded mappings. Doing this analysis on v3 just saves us doing a distinct operation on the
+scientific names.
+"""
 import json
 
 from pathlib import Path

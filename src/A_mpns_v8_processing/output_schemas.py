@@ -26,7 +26,7 @@ OUTPUT_SCHEMA_V2 = StructType(
         StructField("scientific_name_type", StringType(), False),
         StructField("non_scientific_name_id", StringType(), False),
         StructField("non_scientific_name", StringType(), False),
-        StructField("non_scientific_type", StringType(), False),
+        StructField("non_scientific_name_type", StringType(), False),
     ]
 )
 
@@ -53,6 +53,20 @@ OUTPUT_SCHEMA_V3 = StructType(
         StructField("non_scientific_name_count", IntegerType(), False),
         StructField("common_name_count", IntegerType(), True),
         StructField("pharmaceutical_name_count", IntegerType(), True),
+    ]
+)
+
+OUTPUT_SCHEMA_V4 = StructType(
+    [
+        StructField("mapping_id", IntegerType(), False),
+        StructField("scientific_name_id", StringType(), False),
+        StructField("scientific_name", StringType(), False),
+        StructField("scientific_name_type", StringType(), False),
+        StructField("scientific_name_length", IntegerType(), False),
+        StructField("non_scientific_name_id", StringType(), False),
+        StructField("non_scientific_name", StringType(), False),
+        StructField("non_scientific_name_type", StringType(), False),
+        StructField("non_scientific_name_length", IntegerType(), False),
     ]
 )
 

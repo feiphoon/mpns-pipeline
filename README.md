@@ -7,7 +7,7 @@
     + [`inv` task breakdown](#-inv--task-breakdown)
       - [`inv ps.build`](#-inv-psbuild-)
       - [`inv ps.build-no-cache`](#-inv-psbuild-no-cache-)
-      - [`inv ps.mpns_v8_processing_run_v3`](#-inv-psmpns-v8-processing-run-v3-)
+      - [`inv ps.mpns_v8_processing_run_v4`](#-inv-psmpns-v8-processing-run-v4-)
       - [`inv test`](#-inv-test-)
       - [`inv lint`](#-inv-lint-)
     + [VSCode settings](#vscode-settings-)
@@ -21,7 +21,7 @@ The code stages in this repo:
 - [C_create_labels_for_annotation](src/C_create_labels_for_annotation/README.md)
 
 The data stages in this repo:
-- **A_mpns_v8_processing:** The raw MPNS v8 datasets in `data/mpns/mpns_v8` folder are processed to `processed/mpns/mpns_v8/mpns_name_mappings/v2/scientific_name_type=...`
+- **A_mpns_v8_processing:** The raw MPNS v8 datasets in `data/mpns/mpns_v8` folder are processed to `processed/mpns/mpns_v8/mpns_name_mappings/v4/scientific_name_type=...`
     The entire repo and pipeline are designed to easily allow a new version of MPNS to be introduced.
 - **B_stratify_mpns_name_mappings:** This step might be moved to the NER pipeline.
 - **C_create_labels_for_annotation:** This is a very simple file of labels to be uploaded to the annotation tool, located at `data/reference/mpns_v8/annotation_labels.json`.
@@ -110,9 +110,9 @@ To rebuild instead of drawing the base image from cache:
 inv ps.build-no-cache
 ```
 
-To run the processing (the latest version is V2):
+To run the processing (the latest version is V4):
 ```bash
-inv ps.mpns_v8_processing_run_v2
+inv ps.mpns_v8_processing_run_v4
 ```
 
 ### `inv` task breakdown
@@ -136,8 +136,8 @@ Check that the necessary images were created. The repositories and tags we want 
 docker image ls
 ```
 
-#### `inv ps.mpns_v8_processing_run_v3`
-Make a docker volume, defining a `job` folder on it, and run the processing of v3 on it.
+#### `inv ps.mpns_v8_processing_run_v4`
+Make a docker volume, defining a `job` folder on it, and run the processing of v4 on it.
 
 ```bash
 docker run -v $(pwd):/job punchy/mpns-pipeline:0.1.0 [options] /main.py [app arguments]

@@ -1,3 +1,8 @@
+"""
+This version of MPNS processing has a minor difference - we return to one-on-one mappings
+to make our life easier downstream, and we precalculate the lengths of each name,
+anticipating replacement later.
+"""
 import os
 import json
 from functools import reduce
@@ -320,7 +325,11 @@ def construct_name_mappings_df(df: DataFrame, scientific_name_type: str) -> Data
         df.withColumnRenamed("name_id", "non_scientific_name_id")
         .withColumnRenamed("name", "non_scientific_name")
         .withColumnRenamed("name_type", "non_scientific_name_type")
+        .withColumn(
+            "non_scientific_name_length", f.length(f.col("non_scientific_name"))
+        )
         .withColumn("scientific_name_type", f.lit(scientific_name_type))
+        .withColumn("scientific_name_length", f.length(f.col("scientific_name")))
     )
 
 

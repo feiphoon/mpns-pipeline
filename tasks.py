@@ -54,6 +54,18 @@ def mpns_v8_processing_run_v3(c):
 
 
 @task
+def mpns_v8_processing_run_v4(c):
+    c.run(
+        "docker run -v $(pwd):/job punchy/mpns-pipeline:0.1.0 \
+            src/A_mpns_v8_processing/mpns_v8_processing_v4.py \
+            --name 'mpns-pipeline-container'\
+                ;CONTAINER_ID=$(docker ps -lq)\
+                    ;docker cp `echo $CONTAINER_ID`:/data/processed/mpns data/processed/",
+        pty=True,
+    )
+
+
+@task
 def mpns_v8_name_mappings_analysis_v3(c):
     c.run(
         "docker run -v $(pwd):/job punchy/mpns-pipeline:0.1.0 \
@@ -73,6 +85,7 @@ ps.add_task(build_no_cache)
 ps.add_task(mpns_v8_processing_run_v1)
 ps.add_task(mpns_v8_processing_run_v2)
 ps.add_task(mpns_v8_processing_run_v3)
+ps.add_task(mpns_v8_processing_run_v4)
 ps.add_task(mpns_v8_name_mappings_analysis_v3, "mpns_name_mappings_analysis")
 ns.add_collection(ps)
 

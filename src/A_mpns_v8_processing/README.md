@@ -12,7 +12,7 @@ This stage was done in Spark because, in descending order of importance
 - In case of larger data which can't be handled on a local machine, this code can be run in Google Colab or a cloud distributed processing microservice.
 - Casting and transformations were painless.
 
-Two processing versions are available at this stage - this was because of improvements. The one in use will be v2; v1 has been kept for posterity.
+Two processing versions are available at this stage - this was because of improvements. The one in use will be v3; v1 & v2 have been kept for posterity and will be useful to explain the evolution of this process.
 
 
 ## Processing V2
@@ -25,7 +25,7 @@ Two processing versions are available at this stage - this was because of improv
     - `medicinal_mpns_non_scientific_names.csv`
 1. The "Low" (`L`) quality rating and "Misapplied" (`Misapplied`) taxanomy status entries are filtered out from the Plants and Synonyms datasets.
 1. The `common` & `pharmaceutical` names in the Non-Scientific Name dataset are separated from the `sci_cited_medicinal` entries.
-1. Each of the main items in the Plants, Synonyms and Sci-Cited-Medicinal datasets are matched against any entries in the Common & Pharmaceutical Name datatsets, which produces an exploded mapping of the former names to the names in the latter.
+1. Each of the main items in the Plants, Synonyms and Sci-Cited-Medicinal datasets are matched against any entries in the Common & Pharmaceutical Name datasets, which produces an exploded mapping of the former names to the names in the latter.
 1. The three name mapping datasets are unioned and each row is given a **contiguous unique numerical ID** as a `mapping_id`. This is an important detail as providing a unique numerical ID in Spark is normally done with `monotonically_increasing_id`, that allows for efficient execution across distributed workers, but it does not produce a contiguous sequence, which may be confusing and later on troublesome during shuffling and splitting the mappings dataset for train/validation/test. This is instead done by the `row_number` Windowing function. However as no partition could be specified for this statement, there is a risk of running out of memory during this operation if the input data is large enough. It is important to note also that neither of these methods are deterministic, so the generation of the `mapping_id` is not idempotent.
 1. The resulting `mpns_name_mappings` dataset is repartitioned to several parquet files (against an output schema) and output at `data/processed/mpns/mpns_v8/mpns_name_mappings/v2/`. The output is partitioned by `scientific_name_type`, so `plant`, `synonym` & `sci_cited_medicinal` folders are produced. It will make it easier to manage mappings for training later.
 1. A `processing_metadata.json` file is also produced with counts on the mappings (see last part of this v2 section).
@@ -161,7 +161,7 @@ JSON representation for easier reading (can be observed in the sample run):
     - `medicinal_mpns_synonyms.csv`
     - `medicinal_mpns_non_scientific_names.csv`
 1. The "Low" (`L`) quality rating and "Misapplied" (`Misapplied`) taxanomy status entries are filtered out from the Plants and Synonyms datasets.
-1. Each of the main items in the Plants and the Synonyms datasets are matched against any entries in the Non-Scientific Name datatset, which produces an exploded mapping of the former names to the names in the latter.
+1. Each of the main items in the Plants and the Synonyms datasets are matched against any entries in the Non-Scientific Name dataset, which produces an exploded mapping of the former names to the names in the latter.
 1. The two name mapping datasets are unioned and each row is given a **contiguous unique numerical ID** as a `mapping_id`. This is an important detail as providing a unique numerical ID in Spark is normally done with `monotonically_increasing_id`, that allows for efficient execution across distributed workers, but it does not produce a contiguous sequence, which may be confusing and later on troublesome during shuffling and splitting the mappings dataset for train/validation/test. This is instead done by the `row_number` Windowing function. However as no partition could be specified for this statement, there is a risk of running out of memory during this operation if the input data is large enough. It is important to note also that neither of these methods are deterministic, so the generation of the `mapping_id` is not idempotent.
 1. The resulting `mpns_name_mappings` dataset is repartitioned to several single JSONLines file (against an output schema) and output at `data/processed/mpns/mpns_v8/mpns_name_mappings/v1/`
 1. A `processing_metadata.json` file is also produced with counts on the mappings (see last part of this v2 section).

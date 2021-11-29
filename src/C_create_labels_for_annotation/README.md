@@ -28,6 +28,6 @@ The required format is a JSON file (example from the doccano server walkthrough)
 
 ## The labels we need:
 
-- `scientific`: This should cover plant full scientific names from plants, full scientific names from synonyms, and the class of names from the non-scientific names datatset labelled as "sci_cited_medicinal"
-- `common`: This is the class of names from the non-scientific names datatset labelled as "common"
-- `pharmaceutical`: This isthe class of names from the non-scientific names datatset labelled as "pharmaceutical"
+- `scientific`: This should cover plant full scientific names from plants, full scientific names from synonyms, and the class of names from the non-scientific names dataset labelled as "sci_cited_medicinal"
+- `common`: This is the class of names from the non-scientific names dataset labelled as "common"
+- `pharmaceutical`: This isthe class of names from the non-scientific names dataset labelled as "pharmaceutical"

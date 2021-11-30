@@ -132,11 +132,15 @@ def analyse_mpns_v8_name_relationships(
         .withColumn("scm_non_scientific_name_count", f.col("scm_com_pha.scm"))
         .withColumn("com_non_scientific_name_count", f.col("scm_com_pha.com"))
         .withColumn("pha_non_scientific_name_count", f.col("scm_com_pha.pha"))
+        .drop("non_scientific_name_breakdown")
     )
 
     # print(non_scientific_names_df.show(2, truncate=False))
 
     # Join all three dataframes for all information
+    # Fill all eligible null values as 0 (This only matters with the counts - .fillna() will do nothing if a
+    # column type doesn't match the fill value type, i.e. synonym_full_scientific_name will remain null
+    # if we ask for zeroes.)
     all_information_df: DataFrame = (
         filtered_plants_df.join(
             filtered_synonyms_df,
@@ -150,6 +154,7 @@ def analyse_mpns_v8_name_relationships(
             "left",
         )
         .drop("synonym_id", "non_scientific_name_id")
+        .fillna(0)
     )
 
     # print(all_information_df.show(truncate=False))

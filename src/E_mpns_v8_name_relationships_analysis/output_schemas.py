@@ -29,9 +29,6 @@ OUTPUT_SCHEMA = StructType(
         ),
         StructField("total_non_scientific_name_count", IntegerType(), False),
         StructField(
-            "non_scientific_name_breakdown", ArrayType(StringType(), False), False
-        ),
-        StructField(
             "scm_com_pha",
             StructType(
                 [

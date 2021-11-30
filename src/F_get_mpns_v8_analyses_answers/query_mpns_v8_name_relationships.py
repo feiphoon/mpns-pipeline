@@ -21,10 +21,13 @@ def query_mpns_v8_name_relationships(
         "query_mpns_v8_name_relationships"
     ).getOrCreate()
 
-    name_relationships_df: DataFrame = spark.read.json(input_filepath)
+    if sample_run:
+        name_relationships_df: DataFrame = spark.read.json(input_filepath)
+    else:
+        name_relationships_df: DataFrame = spark.read.parquet(input_filepath)
 
     plants_with_minimum_relationships_df: DataFrame = name_relationships_df.transform(
-        lambda df: get_plants_with_minimum_relationships(df, num_results=20)
+        lambda df: get_plants_with_minimum_relationships(df)
     )
 
     write_query_results(plants_with_minimum_relationships_df, output_filepath)
@@ -38,7 +41,7 @@ def write_query_results(df: DataFrame, output_filepath: Path) -> None:
     df.coalesce(1).write.format("json").mode("overwrite").save(output_filepath)
 
 
-def get_plants_with_minimum_relationships(df: DataFrame, num_results: int) -> DataFrame:
+def get_plants_with_minimum_relationships(df: DataFrame) -> DataFrame:
     df = df.filter(
         (f.col("synonym_count") >= 1)
         & (f.col("scm_non_scientific_name_count") >= 1)

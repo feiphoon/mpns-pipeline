@@ -77,6 +77,18 @@ def mpns_v8_name_mappings_analysis_v3(c):
     )
 
 
+@task
+def mpns_v8_name_relationships_analysis(c):
+    c.run(
+        "docker run -v $(pwd):/job punchy/mpns-pipeline:0.1.0 \
+            src/E_get_simplest_mpns_v8_name_relationships/analyse_mpns_v8_name_relationships.py \
+            --name 'mpns-pipeline-container'\
+                ;CONTAINER_ID=$(docker ps -lq)\
+                    ;docker cp `echo $CONTAINER_ID`:/data/analysis/mpns data/analysis/",
+        pty=True,
+    )
+
+
 ns = Collection()
 ps = Collection("ps")
 
@@ -87,6 +99,7 @@ ps.add_task(mpns_v8_processing_run_v2)
 ps.add_task(mpns_v8_processing_run_v3)
 ps.add_task(mpns_v8_processing_run_v4)
 ps.add_task(mpns_v8_name_mappings_analysis_v3, "mpns_name_mappings_analysis")
+ps.add_task(mpns_v8_name_relationships_analysis, "mpns_v8_name_relationships_analysis")
 ns.add_collection(ps)
 
 

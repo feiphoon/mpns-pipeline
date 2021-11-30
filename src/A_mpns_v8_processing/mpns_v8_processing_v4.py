@@ -32,8 +32,8 @@ DataFrame.transform = transform
 
 
 def process_mpns_v8_raw(
-    input_filepath: Path,
-    output_filepath: Path,
+    input_filepath: str,
+    output_filepath: str,
     exclude_quality_rating: List[str],
     exclude_taxon_status: List[str],
     sample_run: bool,
@@ -336,8 +336,8 @@ def construct_name_mappings_df(df: DataFrame, scientific_name_type: str) -> Data
 def write_name_mappings_to_file(
     df: DataFrame, output_filepath: str, sample_run: bool
 ) -> None:
-    output_filepath_path: Path = Path(output_filepath).parents[0]
-    output_filepath_path.mkdir(parents=True, exist_ok=True)
+    output_filepath_parent: Path = Path(output_filepath).parents[0]
+    output_filepath_parent.mkdir(parents=True, exist_ok=True)
     if sample_run:
         # Coalesce to 1 JSON file for sample demonstration
         df.coalesce(1).write.format("json").mode("overwrite").option(

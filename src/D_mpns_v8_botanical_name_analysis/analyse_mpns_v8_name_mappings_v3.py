@@ -143,11 +143,11 @@ def write_process_metadata(
 name_mappings_filepath: Path = Path(
     "data/processed/mpns/mpns_v8/mpns_name_mappings/v3/"
 )
-metadata_output_filepath_path: Path = Path("data/analysis/mpns/mpns_v8/")
-metadata_output_filepath_path.mkdir(parents=True, exist_ok=True)
+metadata_output_filepath: Path = Path("data/analysis/mpns/mpns_v8/botanical_names/")
+metadata_output_filepath.mkdir(parents=True, exist_ok=True)
 
 
 analyse_mpns_v8_name_mappings_v3(
     name_mappings_filepath=name_mappings_filepath,
-    metadata_output_filepath=metadata_output_filepath_path,
+    metadata_output_filepath=metadata_output_filepath,
 )

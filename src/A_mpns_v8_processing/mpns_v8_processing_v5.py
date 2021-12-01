@@ -181,7 +181,10 @@ def transform_non_scientific_names(df: DataFrame) -> DataFrame:
 
 def construct_non_scientific_name_struct(df: DataFrame, col_name: str) -> DataFrame:
     return df.groupBy(
-        "scientific_name", "scientific_name_id", "scientific_name_length"
+        "scientific_name",
+        "scientific_name_id",
+        "scientific_name_length",
+        "scientific_name_type",
     ).agg(
         f.collect_list(
             f.struct(

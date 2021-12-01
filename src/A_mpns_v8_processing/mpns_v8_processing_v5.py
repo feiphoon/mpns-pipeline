@@ -98,7 +98,7 @@ def process_mpns_v8_raw(
         )
     )
 
-    print(synonyms_to_common_and_pharmaceutical_names_df.show(truncate=False))
+    # print(synonyms_to_common_and_pharmaceutical_names_df.show(truncate=False))
 
     sci_cited_medicinal_to_common_and_pharmaceutical_names_df = (
         create_sci_cited_medicinal_to_common_and_pharmaceutical_names_df(
@@ -111,33 +111,33 @@ def process_mpns_v8_raw(
         )
     )
 
-    print(
-        sci_cited_medicinal_to_common_and_pharmaceutical_names_df.show(truncate=False)
+    # print(
+    #     sci_cited_medicinal_to_common_and_pharmaceutical_names_df.show(truncate=False)
+    # )
+
+    # Join all three name mappings DataFrames for everything
+    _dfs_to_union: list = [
+        plants_to_common_and_pharmaceutical_names_df,
+        synonyms_to_common_and_pharmaceutical_names_df,
+        sci_cited_medicinal_to_common_and_pharmaceutical_names_df,
+    ]
+
+    all_name_mappings_df: DataFrame = reduce(DataFrame.union, _dfs_to_union)
+
+    # Add a unique mapping_id - won't be deterministic with each run!
+    all_name_mappings_df: DataFrame = all_name_mappings_df.withColumn(
+        "mapping_id",
+        f.row_number().over(Window.orderBy("scientific_name")),
     )
 
-    # # Join all three name mappings DataFrames for everything
-    # _dfs_to_union: list = [
-    #     plants_to_common_and_pharmaceutical_names_df,
-    #     synonyms_to_common_and_pharmaceutical_names_df,
-    #     sci_cited_medicinal_to_common_and_pharmaceutical_names_df,
-    # ]
-
-    # all_name_mappings_df: DataFrame = reduce(DataFrame.union, _dfs_to_union)
-
-    # # Add a unique mapping_id - won't be deterministic with each run!
-    # all_name_mappings_df: DataFrame = all_name_mappings_df.withColumn(
-    #     "mapping_id",
-    #     f.row_number().over(Window.orderBy("scientific_name")),
-    # )
-
-    # # Write name mappings to JSON or parquet files
-    # write_name_mappings_to_file(
-    #     df=all_name_mappings_df, output_filepath=output_filepath, sample_run=sample_run
-    # )
+    # Write name mappings to JSON or parquet files
+    write_name_mappings_to_file(
+        df=all_name_mappings_df, output_filepath=output_filepath, sample_run=sample_run
+    )
 
     # # print(all_name_mappings_df.show(truncate=False))
 
-    # write_process_metadata(df=all_name_mappings_df, output_filepath=output_filepath)
+    write_process_metadata(df=all_name_mappings_df, output_filepath=output_filepath)
 
 
 def load_for_schema(
@@ -461,19 +461,11 @@ def write_process_metadata(df: DataFrame, output_filepath: Path) -> None:
     sci_cited_medicinal_name_count: int = df.filter(
         f.col("scientific_name_type") == "sci_cited_medicinal"
     ).count()
-    common_name_count: int = df.filter(
-        f.col("non_scientific_name_type") == "common"
-    ).count()
-    pharmaceutical_name_count: int = df.filter(
-        f.col("non_scientific_name_type") == "pharmaceutical"
-    ).count()
 
     _metadata = {
         "total_count": total_count,
         "plant_name_count": plant_name_count,
         "synonym_name_count": synonym_name_count,
-        "common_name_count": common_name_count,
-        "pharmaceutical_name_count": pharmaceutical_name_count,
         "sci_cited_medicinal_name_count": sci_cited_medicinal_name_count,
     }
 

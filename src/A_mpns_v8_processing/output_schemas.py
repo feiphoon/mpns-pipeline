@@ -107,8 +107,8 @@ OUTPUT_SCHEMA_V5 = StructType(
             True,
         ),
         StructField("non_scientific_name_count", IntegerType(), False),
-        StructField("common_name_count", IntegerType(), True),
-        StructField("pharmaceutical_name_count", IntegerType(), True),
+        StructField("common_name_count", IntegerType(), False),
+        StructField("pharmaceutical_name_count", IntegerType(), False),
     ]
 )
 

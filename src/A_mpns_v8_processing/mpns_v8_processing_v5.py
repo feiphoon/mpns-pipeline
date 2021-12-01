@@ -414,7 +414,7 @@ def create_sci_cited_medicinal_to_common_and_pharmaceutical_names_df(
         ).transform(lambda df: construct_non_scientific_name_struct(df, "common_names"))
     )
 
-    print(sci_cited_medicinal_to_common_names_df.show(truncate=False))
+    # print(sci_cited_medicinal_to_common_names_df.show(truncate=False))
 
     sci_cited_medicinal_to_pharmaceutical_names_df: DataFrame = (
         sci_cited_medicinal_to_pharmaceutical_names_df.select(

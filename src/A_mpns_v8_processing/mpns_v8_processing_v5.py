@@ -208,6 +208,7 @@ def combine_common_and_pharmaceutical_mappings(
         .drop(pharmaceutical_df.scientific_name_length)
         .drop(pharmaceutical_df.scientific_name_id)
         .drop(pharmaceutical_df.scientific_name)
+        .drop(pharmaceutical_df.scientific_name_type)
     )
 
 

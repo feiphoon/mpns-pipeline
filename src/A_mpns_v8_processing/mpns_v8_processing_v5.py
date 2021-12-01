@@ -39,6 +39,7 @@ def process_mpns_v8_raw(
     sample_run: bool,
 ) -> None:
     spark = SparkSession.builder.appName("process_mpns_v8_raw").getOrCreate()
+    spark.sparkContext.setLogLevel("ERROR")
 
     # Load the three files into DataFrames
     plants_df: DataFrame = load_for_schema(

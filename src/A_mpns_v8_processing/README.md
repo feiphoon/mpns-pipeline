@@ -14,6 +14,39 @@ This stage was done in Spark because, in descending order of importance
 
 Two processing versions are available at this stage - this was because of improvements. The one in use will be v3; v1 & v2 have been kept for posterity and will be useful to explain the evolution of this process.
 
+## Processing V5
+
+#### Output
+
+##### v5 `mpns_name_mappings/*.parquet`
+
+The following parquet format can be observed in the real data run:
+
+| scientific_name_id | scientific_name                  | scientific_name_type | scientific_name_length | common_names                                                                                                                   | pharmaceutical_names                | common_name_count | pharmaceutical_name_count | non_scientific_name_count | mapping_id |
+|--------------------|----------------------------------|----------------------|------------------------|--------------------------------------------------------------------------------------------------------------------------------|-------------------------------------|-------------------|---------------------------|---------------------------|------------|
+| wcsCmp922693       | Bellis armena Boiss.             | synonym              | 20                     | null                                                                                                                           | null                                | 0                 | 0                         | 0                         | 1          |
+| wcsCmp922694       | Bellis hortensis Mill.           | synonym              | 22                     | null                                                                                                                           | null                                | 0                 | 0                         | 0                         | 2          |
+| wcsCmp922695       | Bellis hybrida Ten.              | synonym              | 19                     | null                                                                                                                           | null                                | 0                 | 0                         | 0                         | 3          |
+| wcsCmp922692       | Bellis perennis                  | sci_cited_medicinal  | 15                     | [[bellide, wcsCmp922692, 7], [bellis perennis, wcsCmp922692, 15], [chu ju, wcsCmp922692, 6], [common daisy, wcsCmp922692, 12]] | [[made-up daisy, wcsCmp922692, 13]] | 4                 | 1                         | 5                         | 4          |
+| wcsCmp922692       | Bellis perennis L.               | plant                | 18                     | [[bellide, wcsCmp922692, 7], [bellis perennis, wcsCmp922692, 15], [chu ju, wcsCmp922692, 6], [common daisy, wcsCmp922692, 12]] | [[made-up daisy, wcsCmp922692, 13]] | 4                 | 1                         | 5                         | 5          |
+| wcsCmp922692       | Bellis perennis L.               | sci_cited_medicinal  | 18                     | [[bellide, wcsCmp922692, 7], [bellis perennis, wcsCmp922692, 15], [chu ju, wcsCmp922692, 6], [common daisy, wcsCmp922692, 12]] | [[made-up daisy, wcsCmp922692, 13]] | 4                 | 1                         | 5                         | 6          |
+| wcsCmp922692       | Bellis perennis Linnaeus         | sci_cited_medicinal  | 24                     | [[bellide, wcsCmp922692, 7], [bellis perennis, wcsCmp922692, 15], [chu ju, wcsCmp922692, 6], [common daisy, wcsCmp922692, 12]] | [[made-up daisy, wcsCmp922692, 13]] | 4                 | 1                         | 5                         | 7          |
+| wcsCmp922696       | Bellis pumila Arv.-Touv. & Dupuy | synonym              | 32                     | null                                                                                                                           | null                                | 0                 | 0                         | 0                         | 8          |
+
+
+##### v5 `processing_metadata.json`
+
+Example:
+
+```json
+{
+    "total_count": 8,
+    "plant_name_count": 1,
+    "synonym_name_count": 4,
+    "sci_cited_medicinal_name_count": 3
+}
+```
+--------------
 
 ## Processing V4
 

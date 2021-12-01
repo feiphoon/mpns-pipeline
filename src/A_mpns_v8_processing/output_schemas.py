@@ -84,8 +84,8 @@ OUTPUT_SCHEMA_V5 = StructType(
                 StructType(
                     [
                         StructField("non_scientific_name", StringType(), False),
-                        StructField("non_scientific_name_id", StringType(), False),
                         StructField("non_scientific_name_length", IntegerType(), False),
+                        StructField("non_scientific_name_id", StringType(), False),
                     ]
                 ),
                 True,
@@ -98,8 +98,8 @@ OUTPUT_SCHEMA_V5 = StructType(
                 StructType(
                     [
                         StructField("non_scientific_name", StringType(), False),
-                        StructField("non_scientific_name_id", StringType(), False),
                         StructField("non_scientific_name_length", IntegerType(), False),
+                        StructField("non_scientific_name_id", StringType(), False),
                     ]
                 ),
                 True,

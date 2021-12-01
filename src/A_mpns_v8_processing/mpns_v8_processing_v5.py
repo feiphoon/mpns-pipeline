@@ -314,7 +314,7 @@ def create_synonyms_to_common_and_pharmaceutical_names_df(
             exclude_quality_rating=exclude_quality_rating,
             exclude_taxon_status=exclude_taxon_status,
         )
-        .withColumnRenamed("name_id", "scientific_name_id")
+        .withColumnRenamed("acc_name_id", "scientific_name_id")
         .withColumnRenamed("full_scientific_name", "scientific_name")
         .withColumn("scientific_name_length", f.length(f.col("scientific_name")))
         .withColumn("scientific_name_type", f.lit("synonym"))

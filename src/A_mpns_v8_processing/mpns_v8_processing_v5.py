@@ -68,20 +68,52 @@ def process_mpns_v8_raw(
         f.col("name_type") == "sci_cited_medicinal"
     )
 
-    common_names_df: DataFrame = non_scientific_names_df.filter(
-        f.col("name_type") == "common"
-    ).transform(transform_non_scientific_names)
+    common_names_df: DataFrame = (
+        non_scientific_names_df.filter(f.col("name_type") == "common")
+        .transform(transform_non_scientific_names)
+        .transform(lambda df: construct_non_scientific_name_struct(df, "common_names"))
+    )
 
-    pharmaceutical_names_df: DataFrame = non_scientific_names_df.filter(
-        f.col("name_type") == "pharmaceutical"
-    ).transform(transform_non_scientific_names)
+    # print(common_names_df.show(truncate=False))
+
+    pharmaceutical_names_df: DataFrame = (
+        non_scientific_names_df.filter(f.col("name_type") == "pharmaceutical")
+        .transform(transform_non_scientific_names)
+        .transform(
+            lambda df: construct_non_scientific_name_struct(df, "pharmaceutical_names")
+        )
+    )
+
+    # print(pharmaceutical_names_df.show(truncate=False))
+
+    plants_name_ids_only_df: DataFrame = plants_df.select(
+        "name_id"
+    ).dropDuplicates()  # Temporary dropDuplicates
+
+    common_and_pharmaceutical_names_df: DataFrame = plants_name_ids_only_df.join(
+        common_names_df,
+        plants_name_ids_only_df.name_id == common_names_df.plant_id,
+        how="left",
+    ).drop("plant_id")
+
+    common_and_pharmaceutical_names_df: DataFrame = (
+        common_and_pharmaceutical_names_df.join(
+            pharmaceutical_names_df,
+            common_and_pharmaceutical_names_df.name_id
+            == pharmaceutical_names_df.plant_id,
+            how="left",
+        )
+        .drop(pharmaceutical_names_df.plant_id)
+        .transform(add_non_scientific_name_counts)
+    )
+
+    # print(common_and_pharmaceutical_names_df.show(truncate=False))
 
     # Create three name mapping DataFrames
     plants_to_common_and_pharmaceutical_names_df = (
         create_plants_to_common_and_pharmaceutical_names_df(
             plants_df=plants_df,
-            common_names_df=common_names_df,
-            pharmaceutical_names_df=pharmaceutical_names_df,
+            common_and_pharmaceutical_names_df=common_and_pharmaceutical_names_df,
             exclude_quality_rating=exclude_quality_rating,
             exclude_taxon_status=exclude_taxon_status,
         )
@@ -92,8 +124,7 @@ def process_mpns_v8_raw(
     synonyms_to_common_and_pharmaceutical_names_df = (
         create_synonyms_to_common_and_pharmaceutical_names_df(
             synonyms_df=synonyms_df,
-            common_names_df=common_names_df,
-            pharmaceutical_names_df=pharmaceutical_names_df,
+            common_and_pharmaceutical_names_df=common_and_pharmaceutical_names_df,
             exclude_quality_rating=exclude_quality_rating,
             exclude_taxon_status=exclude_taxon_status,
         )
@@ -105,8 +136,7 @@ def process_mpns_v8_raw(
         create_sci_cited_medicinal_to_common_and_pharmaceutical_names_df(
             plants_df=plants_df,
             sci_cited_medicinal_names_df=sci_cited_medicinal_names_df,
-            common_names_df=common_names_df,
-            pharmaceutical_names_df=pharmaceutical_names_df,
+            common_and_pharmaceutical_names_df=common_and_pharmaceutical_names_df,
             exclude_quality_rating=exclude_quality_rating,
             exclude_taxon_status=exclude_taxon_status,
         )
@@ -126,17 +156,18 @@ def process_mpns_v8_raw(
     all_name_mappings_df: DataFrame = reduce(DataFrame.union, _dfs_to_union)
 
     # Add a unique mapping_id - won't be deterministic with each run!
+    # Tidy up null counts with zeroes - caused by no data available - that's fine.
     all_name_mappings_df: DataFrame = all_name_mappings_df.withColumn(
         "mapping_id",
         f.row_number().over(Window.orderBy("scientific_name")),
-    )
+    ).transform(replace_null_counts_with_zero)
+
+    # print(all_name_mappings_df.show(truncate=False))
 
     # Write name mappings to JSON or parquet files
     write_name_mappings_to_file(
         df=all_name_mappings_df, output_filepath=output_filepath, sample_run=sample_run
     )
-
-    # # print(all_name_mappings_df.show(truncate=False))
 
     write_process_metadata(df=all_name_mappings_df, output_filepath=output_filepath)
 
@@ -172,21 +203,16 @@ def filter_exclusions(
 
 def transform_non_scientific_names(df: DataFrame) -> DataFrame:
     return (
-        df.withColumn("non_scientific_name_id", f.col("name_id"))
-        .withColumn("non_scientific_name", f.col("name"))
+        df.withColumn("non_scientific_name", f.col("name"))
         .withColumn(
             "non_scientific_name_length", f.length(f.col("non_scientific_name"))
         )
+        .withColumn("non_scientific_name_id", f.col("name_id"))
     )
 
 
 def construct_non_scientific_name_struct(df: DataFrame, col_name: str) -> DataFrame:
-    return df.groupBy(
-        "scientific_name",
-        "scientific_name_id",
-        "scientific_name_length",
-        "scientific_name_type",
-    ).agg(
+    return df.groupBy("plant_id").agg(
         f.collect_list(
             f.struct(
                 f.col("non_scientific_name"),
@@ -197,26 +223,22 @@ def construct_non_scientific_name_struct(df: DataFrame, col_name: str) -> DataFr
     )
 
 
-def combine_common_and_pharmaceutical_mappings(
-    common_df: DataFrame, pharmaceutical_df: DataFrame
-) -> DataFrame:
-    return (
-        common_df.join(
-            pharmaceutical_df,
-            common_df.scientific_name_id == pharmaceutical_df.scientific_name_id,
-            how="left",
-        )
-        .drop(pharmaceutical_df.scientific_name_length)
-        .drop(pharmaceutical_df.scientific_name_id)
-        .drop(pharmaceutical_df.scientific_name)
-        .drop(pharmaceutical_df.scientific_name_type)
-    )
-
-
 def add_non_scientific_name_counts(df: DataFrame) -> DataFrame:
     return (
         df.withColumn("common_name_count", f.size("common_names"))
         .withColumn("pharmaceutical_name_count", f.size("pharmaceutical_names"))
+        .withColumn(
+            "common_name_count",
+            f.when(f.col("pharmaceutical_name_count") == f.lit(-1), 0).otherwise(
+                f.col("common_name_count")
+            ),
+        )
+        .withColumn(
+            "pharmaceutical_name_count",
+            f.when(f.col("pharmaceutical_name_count") == f.lit(-1), 0).otherwise(
+                f.col("pharmaceutical_name_count")
+            ),
+        )
         .withColumn(
             "non_scientific_name_count",
             f.col("common_name_count") + f.col("pharmaceutical_name_count"),
@@ -224,10 +246,19 @@ def add_non_scientific_name_counts(df: DataFrame) -> DataFrame:
     )
 
 
+def replace_null_counts_with_zero(df: DataFrame) -> DataFrame:
+    return df.fillna(
+        {
+            "common_name_count": 0,
+            "pharmaceutical_name_count": 0,
+            "non_scientific_name_count": 0,
+        }
+    )
+
+
 def create_plants_to_common_and_pharmaceutical_names_df(
     plants_df: DataFrame,
-    common_names_df: DataFrame,
-    pharmaceutical_names_df: DataFrame,
+    common_and_pharmaceutical_names_df: DataFrame,
     exclude_quality_rating: List[str],
     exclude_taxon_status: List[str],
 ) -> DataFrame:
@@ -245,15 +276,10 @@ def create_plants_to_common_and_pharmaceutical_names_df(
         .withColumn("scientific_name_type", f.lit("plant"))
     )
 
-    plants_to_common_names_df: DataFrame = filtered_plants_df.join(
-        common_names_df,
-        filtered_plants_df.scientific_name_id == common_names_df.plant_id,
-        "left",
-    )
-
-    plants_to_pharmaceutical_names_df: DataFrame = filtered_plants_df.join(
-        pharmaceutical_names_df,
-        filtered_plants_df.scientific_name_id == pharmaceutical_names_df.plant_id,
+    plants_to_non_scientific_names_df: DataFrame = filtered_plants_df.join(
+        common_and_pharmaceutical_names_df,
+        filtered_plants_df.scientific_name_id
+        == common_and_pharmaceutical_names_df.name_id,
         "left",
     )
 
@@ -262,31 +288,21 @@ def create_plants_to_common_and_pharmaceutical_names_df(
         "scientific_name",
         "scientific_name_type",
         "scientific_name_length",
-        "non_scientific_name_id",
-        "non_scientific_name",
-        "non_scientific_name_length",
+        "common_names",
+        "pharmaceutical_names",
+        "common_name_count",
+        "pharmaceutical_name_count",
+        "non_scientific_name_count",
     ]
 
-    plants_to_common_names_df: DataFrame = plants_to_common_names_df.select(
+    return plants_to_non_scientific_names_df.select(
         *plants_to_non_scientific_names_cols
-    ).transform(lambda df: construct_non_scientific_name_struct(df, "common_names"))
-
-    plants_to_pharmaceutical_names_df: DataFrame = (
-        plants_to_pharmaceutical_names_df.select(*plants_to_non_scientific_names_cols)
-    ).transform(
-        lambda df: construct_non_scientific_name_struct(df, "pharmaceutical_names")
     )
-
-    return combine_common_and_pharmaceutical_mappings(
-        common_df=plants_to_common_names_df,
-        pharmaceutical_df=plants_to_pharmaceutical_names_df,
-    ).transform(add_non_scientific_name_counts)
 
 
 def create_synonyms_to_common_and_pharmaceutical_names_df(
     synonyms_df: DataFrame,
-    common_names_df: DataFrame,
-    pharmaceutical_names_df: DataFrame,
+    common_and_pharmaceutical_names_df: DataFrame,
     exclude_quality_rating: List[str],
     exclude_taxon_status: List[str],
 ) -> DataFrame:
@@ -304,15 +320,10 @@ def create_synonyms_to_common_and_pharmaceutical_names_df(
         .withColumn("scientific_name_type", f.lit("synonym"))
     )
 
-    synonyms_to_common_names_df: DataFrame = filtered_synonyms_df.join(
-        common_names_df,
-        filtered_synonyms_df.scientific_name_id == common_names_df.plant_id,
-        "left",
-    )
-
-    synonyms_to_pharmaceutical_names_df: DataFrame = filtered_synonyms_df.join(
-        pharmaceutical_names_df,
-        filtered_synonyms_df.scientific_name_id == pharmaceutical_names_df.plant_id,
+    synonyms_to_non_scientific_names_df: DataFrame = filtered_synonyms_df.join(
+        common_and_pharmaceutical_names_df,
+        filtered_synonyms_df.scientific_name_id
+        == common_and_pharmaceutical_names_df.name_id,
         "left",
     )
 
@@ -321,34 +332,22 @@ def create_synonyms_to_common_and_pharmaceutical_names_df(
         "scientific_name",
         "scientific_name_type",
         "scientific_name_length",
-        "non_scientific_name_id",
-        "non_scientific_name",
-        "non_scientific_name_length",
+        "common_names",
+        "pharmaceutical_names",
+        "common_name_count",
+        "pharmaceutical_name_count",
+        "non_scientific_name_count",
     ]
 
-    synonyms_to_common_names_df: DataFrame = synonyms_to_common_names_df.select(
+    return synonyms_to_non_scientific_names_df.select(
         *synonyms_to_non_scientific_names_cols
-    ).transform(lambda df: construct_non_scientific_name_struct(df, "common_names"))
-
-    synonyms_to_pharmaceutical_names_df: DataFrame = (
-        synonyms_to_pharmaceutical_names_df.select(
-            *synonyms_to_non_scientific_names_cols
-        )
-    ).transform(
-        lambda df: construct_non_scientific_name_struct(df, "pharmaceutical_names")
     )
-
-    return combine_common_and_pharmaceutical_mappings(
-        common_df=synonyms_to_common_names_df,
-        pharmaceutical_df=synonyms_to_pharmaceutical_names_df,
-    ).transform(add_non_scientific_name_counts)
 
 
 def create_sci_cited_medicinal_to_common_and_pharmaceutical_names_df(
     plants_df: DataFrame,
     sci_cited_medicinal_names_df: DataFrame,
-    common_names_df: DataFrame,
-    pharmaceutical_names_df: DataFrame,
+    common_and_pharmaceutical_names_df: DataFrame,
     exclude_quality_rating: List[str],
     exclude_taxon_status: List[str],
 ) -> DataFrame:
@@ -386,19 +385,11 @@ def create_sci_cited_medicinal_to_common_and_pharmaceutical_names_df(
         .withColumn("scientific_name_type", f.lit("sci_cited_medicinal"))
     )
 
-    sci_cited_medicinal_to_common_names_df: DataFrame = (
+    sci_cited_medicinal_to_non_scientific_names_df: DataFrame = (
         sci_cited_medicinal_names_df.join(
-            common_names_df,
-            sci_cited_medicinal_names_df.scientific_name_id == common_names_df.plant_id,
-            "left",
-        )
-    )
-
-    sci_cited_medicinal_to_pharmaceutical_names_df: DataFrame = (
-        sci_cited_medicinal_names_df.join(
-            pharmaceutical_names_df,
+            common_and_pharmaceutical_names_df,
             sci_cited_medicinal_names_df.scientific_name_id
-            == pharmaceutical_names_df.plant_id,
+            == common_and_pharmaceutical_names_df.name_id,
             "left",
         )
     )
@@ -408,34 +399,15 @@ def create_sci_cited_medicinal_to_common_and_pharmaceutical_names_df(
         "scientific_name",
         "scientific_name_type",
         "scientific_name_length",
-        "non_scientific_name_id",
-        "non_scientific_name",
-        "non_scientific_name_length",
+        "common_names",
+        "pharmaceutical_names",
+        "common_name_count",
+        "pharmaceutical_name_count",
+        "non_scientific_name_count",
     ]
 
-    sci_cited_medicinal_to_common_names_df: DataFrame = (
-        sci_cited_medicinal_to_common_names_df.select(
-            *sci_cited_medicinal_to_non_scientific_names_cols
-        ).transform(lambda df: construct_non_scientific_name_struct(df, "common_names"))
-    )
-
-    # print(sci_cited_medicinal_to_common_names_df.show(truncate=False))
-
-    sci_cited_medicinal_to_pharmaceutical_names_df: DataFrame = (
-        sci_cited_medicinal_to_pharmaceutical_names_df.select(
-            *sci_cited_medicinal_to_non_scientific_names_cols
-        )
-    ).transform(
-        lambda df: construct_non_scientific_name_struct(df, "pharmaceutical_names")
-    )
-
-    return (
-        combine_common_and_pharmaceutical_mappings(
-            common_df=sci_cited_medicinal_to_common_names_df,
-            pharmaceutical_df=sci_cited_medicinal_to_pharmaceutical_names_df,
-        )
-        .transform(add_non_scientific_name_counts)
-        .dropDuplicates()
+    return sci_cited_medicinal_to_non_scientific_names_df.select(
+        *sci_cited_medicinal_to_non_scientific_names_cols
     )
 
 
@@ -483,24 +455,24 @@ def write_process_metadata(df: DataFrame, output_filepath: Path) -> None:
 # TODO: Use argparse to pass sample_run as a flag to container.
 
 # These are here for demonstration purposes
-sample_mpns_raw_filepath = "data/mpns/sample_mpns_v8/"
-sample_mpns_processed_filepath = (
-    "data/processed/mpns/sample_mpns_v8/mpns_name_mappings/v5/"
-)
-process_mpns_v8_raw(
-    input_filepath=sample_mpns_raw_filepath,
-    output_filepath=sample_mpns_processed_filepath,
-    exclude_quality_rating=["L"],
-    exclude_taxon_status=["Misapplied"],
-    sample_run=True,
-)
-
-# mpns_raw_filepath = "data/mpns/mpns_v8/"
-# mpns_processed_filepath = "data/processed/mpns/mpns_v8/mpns_name_mappings/v5/"
+# sample_mpns_raw_filepath = "data/mpns/sample_mpns_v8/"
+# sample_mpns_processed_filepath = (
+#     "data/processed/mpns/sample_mpns_v8/mpns_name_mappings/v5/"
+# )
 # process_mpns_v8_raw(
-#     input_filepath=mpns_raw_filepath,
-#     output_filepath=mpns_processed_filepath,
+#     input_filepath=sample_mpns_raw_filepath,
+#     output_filepath=sample_mpns_processed_filepath,
 #     exclude_quality_rating=["L"],
 #     exclude_taxon_status=["Misapplied"],
-#     sample_run=False,
+#     sample_run=True,
 # )
+
+mpns_raw_filepath = "data/mpns/mpns_v8/"
+mpns_processed_filepath = "data/processed/mpns/mpns_v8/mpns_name_mappings/v5/"
+process_mpns_v8_raw(
+    input_filepath=mpns_raw_filepath,
+    output_filepath=mpns_processed_filepath,
+    exclude_quality_rating=["L"],
+    exclude_taxon_status=["Misapplied"],
+    sample_run=False,
+)

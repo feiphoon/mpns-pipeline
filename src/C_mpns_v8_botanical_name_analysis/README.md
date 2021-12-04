@@ -6,8 +6,9 @@ The botanical name types are as specified in the 1994 paper Plants in Botanical 
 The regexes are created by me according to the rules in the above paper - the statements are in:
 [src/C_mpns_v8_botanical_name_analysis/botanical_name_regexes.py](src/C_mpns_v8_botanical_name_analysis/botanical_name_regexes.py).
 
-Each regex pattern has test examples found from the MPN (instead of using the ones in the paper). The tests are at:
-[tests/helpers/test_botanical_name_regexes.py](tests/helpers/test_botanical_name_regexes.py).
+Each regex pattern has test examples found from the MPNS (instead of using the ones in the paper). The tests are at:
+[tests/helpers/test_botanical_name_regexes.py](tests/helpers/test_botanical_name_regexes.py). These tests can be run
+using `inv test` on the CLI.
 
 These statistics are just for discussion. Some caveats:
 - The species regex is the most flexible and definitely overlaps with the other name types.
@@ -22,7 +23,10 @@ establish programmatic patterns on names which are already cleaned to a high sta
 maintainers) - to try and do rule-based matching on names in the wild with data hygiene issues will be extremely
 challenging and not scalable.
 
-Format of the analysis file produced: [name_mappings_v3_botanical_name_type_counts.json](data/analysis/mpns/mpns_v8/name_mappings_v3_botanical_name_type_counts.json)
+Format of the analysis file produced:
+[name_mappings_v3_botanical_name_type_counts.json](data/analysis/mpns/mpns_v8/name_mappings_v3_botanical_name_type_counts.json)
+
+Results:
 
 ```json
 {

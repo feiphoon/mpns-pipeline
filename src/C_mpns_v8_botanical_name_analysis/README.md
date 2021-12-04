@@ -1,10 +1,10 @@
-# D: MPNS v8 Botanical Name Analysis
+# C: MPNS v8 Botanical Name Analysis
 
 This section is to analyse the statistics of formats of the scientific names, in the name mappings I've produced.
 
 The botanical name types are as specified in the 1994 paper Plants in Botanical Databases.
 The regexes are created by me according to the rules in the above paper - the statements are in:
-[src/D_mpns_v8_botanical_name_analysis/botanical_name_regexes.py](src/D_mpns_v8_botanical_name_analysis/botanical_name_regexes.py).
+[src/C_mpns_v8_botanical_name_analysis/botanical_name_regexes.py](src/C_mpns_v8_botanical_name_analysis/botanical_name_regexes.py).
 
 Each regex pattern has test examples found from the MPN (instead of using the ones in the paper). The tests are at:
 [tests/helpers/test_botanical_name_regexes.py](tests/helpers/test_botanical_name_regexes.py).

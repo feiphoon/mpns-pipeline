@@ -93,7 +93,7 @@ def mpns_v8_name_mappings_analysis_v3(c):
 def mpns_v8_name_relationships_analysis(c):
     c.run(
         "docker run -v $(pwd):/job punchy/mpns-pipeline:0.1.0 \
-            src/E_mpns_v8_name_relationships_analysis/analyse_mpns_v8_name_relationships.py \
+            src/D_mpns_v8_name_relationships_analysis/analyse_mpns_v8_name_relationships.py \
             --name 'mpns-pipeline-container'\
                 ;CONTAINER_ID=$(docker ps -lq)\
                     ;docker cp `echo $CONTAINER_ID`:/data/analysis/mpns data/analysis/",

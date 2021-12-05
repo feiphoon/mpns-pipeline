@@ -7,7 +7,7 @@
     + [`inv` task breakdown](#-inv--task-breakdown)
       - [`inv ps.build`](#-inv-psbuild-)
       - [`inv ps.build-no-cache`](#-inv-psbuild-no-cache-)
-      - [`inv ps.mpns_v8_processing_run_v4`](#-inv-psmpns-v8-processing-run-v4-)
+      - [`inv ps.mpns_v8_processing_run_v5`](#-inv-psmpns-v8-processing-run-v5-)
       - [`inv test`](#-inv-test-)
       - [`inv lint`](#-inv-lint-)
     + [VSCode settings](#vscode-settings-)
@@ -17,38 +17,16 @@ This part of the work is to produce static MPNS data for the NER pipeline. This 
 
 The code stages in this repo:
 - [A_mpns_v8_processing](src/A_mpns_v8_processing/README.md)
-- [B_stratify_mpns_name_mappings](src/B_stratify_mpns_name_mappings/README.md)
-- [C_create_labels_for_annotation](src/C_create_labels_for_annotation/README.md)
+- [B_create_labels_for_annotation](src/B_create_labels_for_annotation/README.md)
 
 The data stages in this repo:
-- **A_mpns_v8_processing:** The raw MPNS v8 datasets in `data/mpns/mpns_v8` folder are processed to `processed/mpns/mpns_v8/mpns_name_mappings/v4/scientific_name_type=...`
+- **A_mpns_v8_processing:** The raw MPNS v8 datasets in `data/mpns/mpns_v8` folder are processed to `processed/mpns/mpns_v8/mpns_name_mappings/v5/scientific_name_type=...`
     The entire repo and pipeline are designed to easily allow a new version of MPNS to be introduced.
-- **B_stratify_mpns_name_mappings:** This step might be moved to the NER pipeline.
-- **C_create_labels_for_annotation:** This is a very simple file of labels to be uploaded to the annotation tool, located at `data/reference/mpns_v8/annotation_labels.json`.
+- **B_create_labels_for_annotation:** This is a very simple file of labels to be uploaded to the annotation tool, located at `data/reference/mpns_v8/annotation_labels.json`.
+- **C_mpns_v8_botanical_name_analysis:**
+- **D_mpns_v8_name_relationships_analysis:**
+- **E_get_mpns_v8_analyses_answers:**
 
-Structure of the `data` directory:
-```
-data
-├── mpns
-│   ├── mpns_v8
-│   └── sample_mpns_v8
-├── processed
-│   └── mpns
-│       ├── mpns_v8
-│       │   └── mpns_name_mappings
-│       │       ├── v1
-│       │       ├── v2
-│       │       │   ├── scientific_name_type=plant
-│       │       │   ├── scientific_name_type=sci_cited_medicinal
-│       │       │   └── scientific_name_type=synonym
-│       │       └── v2_non_partitioned
-│       └── sample_mpns_v8
-│           └── mpns_name_mappings
-│               ├── v1
-│               └── v2
-└── reference
-    └── mpns_v8
-```
 
 More details on files are in [TREE.md](TREE.md).
 
@@ -110,9 +88,9 @@ To rebuild instead of drawing the base image from cache:
 inv ps.build-no-cache
 ```
 
-To run the processing (the latest version is V4):
+To run the processing (the latest version is v5):
 ```bash
-inv ps.mpns_v8_processing_run_v4
+inv ps.mpns_v8_processing_run_v5
 ```
 
 ### `inv` task breakdown
@@ -136,8 +114,8 @@ Check that the necessary images were created. The repositories and tags we want 
 docker image ls
 ```
 
-#### `inv ps.mpns_v8_processing_run_v4`
-Make a docker volume, defining a `job` folder on it, and run the processing of v4 on it.
+#### `inv ps.mpns_v8_processing_run_v5`
+Make a docker volume, defining a `job` folder on it, and run the processing of v5 on it.
 
 ```bash
 docker run -v $(pwd):/job punchy/mpns-pipeline:0.1.0 [options] /main.py [app arguments]

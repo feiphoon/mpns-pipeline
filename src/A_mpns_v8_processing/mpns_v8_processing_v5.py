@@ -81,6 +81,8 @@ def process_mpns_v8_raw(
         f.col("has_only_allowed_characters")
     )
 
+    # print(non_scientific_names_df.show(20, truncate=False))
+
     common_names_df: DataFrame = (
         non_scientific_names_df.filter(f.col("name_type") == "common")
         .transform(transform_non_scientific_names)
@@ -469,7 +471,7 @@ def check_if_contains_only_allowed_characters(target: str) -> bool:
     allowed_chars = (
         list(string.ascii_lowercase[:])
         + list(string.ascii_uppercase[:])
-        + [".", " ", "(", ")", "'"]
+        + [".", " ", "(", ")", "'", "-"]
     )
     return all(t in allowed_chars for t in target)
 

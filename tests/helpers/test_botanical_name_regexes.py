@@ -1,7 +1,7 @@
 import re
 import pytest
 
-from src.D_mpns_v8_botanical_name_analysis.botanical_name_regexes import (
+from src.C_mpns_v8_botanical_name_analysis.botanical_name_regexes import (
     BotanicalNameRegexes,
 )
 

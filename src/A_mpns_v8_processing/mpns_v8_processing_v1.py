@@ -214,7 +214,7 @@ def write_process_metadata(df: DataFrame, output_filepath: Path) -> None:
         "is_sci_cited_medicinal_name_count": is_sci_cited_medicinal_name_count,
     }
 
-    with Path(f"{output_filepath}/ process_metadata.json").open(
+    with Path(f"{output_filepath}/process_metadata.json").open(
         "w", encoding="utf-8"
     ) as file:
         json.dump(_metadata, file)

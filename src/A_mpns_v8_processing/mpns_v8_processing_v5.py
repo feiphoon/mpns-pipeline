@@ -5,6 +5,7 @@ the lengths of each name, anticipating replacement later.
 """
 import os
 import json
+import string
 from functools import reduce
 from pathlib import Path
 from typing import List
@@ -12,7 +13,7 @@ from typing import List
 from pyspark.sql import SparkSession, functions as f
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.window import Window
-from pyspark.sql.types import StructType
+from pyspark.sql.types import StructType, BooleanType
 
 from input_schemas import (
     MPNS_V8_PLANTS,
@@ -66,6 +67,18 @@ def process_mpns_v8_raw(
     # Separate sci_cited_medicinal_names from common & pharmaceutical names
     sci_cited_medicinal_names_df: DataFrame = non_scientific_names_df.filter(
         f.col("name_type") == "sci_cited_medicinal"
+    )
+
+    # Filter out non_scientific_names which are not using Latin alphabet.
+    # This is because we get into some trouble with replacing entities as they
+    # can be written in unicode to JSON and disrupt entity replacement.
+    non_scientific_names_df: DataFrame = non_scientific_names_df.withColumn(
+        "has_only_allowed_characters",
+        check_if_contains_only_allowed_characters_udf(f.col("name")),
+    )
+
+    non_scientific_names_df: DataFrame = non_scientific_names_df.filter(
+        f.col("has_only_allowed_characters")
     )
 
     common_names_df: DataFrame = (
@@ -451,6 +464,19 @@ def write_process_metadata(df: DataFrame, output_filepath: Path) -> None:
     ) as file:
         json.dump(_metadata, file)
 
+
+def check_if_contains_only_allowed_characters(target: str) -> bool:
+    allowed_chars = (
+        list(string.ascii_lowercase[:])
+        + list(string.ascii_uppercase[:])
+        + [".", " ", "(", ")", "'"]
+    )
+    return all(t in allowed_chars for t in target)
+
+
+check_if_contains_only_allowed_characters_udf = f.udf(
+    check_if_contains_only_allowed_characters, BooleanType()
+)
 
 # TODO: Use argparse to pass sample_run as a flag to container.
 

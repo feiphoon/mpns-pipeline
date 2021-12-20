@@ -12,7 +12,7 @@ This stage was done in Spark because, in descending order of importance
 - In case of larger data which can't be handled on a local machine, this code can be run in Google Colab or a cloud distributed processing microservice.
 - Casting and transformations were painless.
 
-Two processing versions are available at this stage - this was because of improvements. The one in use will be v3; v1 & v2 have been kept for posterity and will be useful to explain the evolution of this process.
+Two processing versions are available at this stage - this was because of improvements. The one in use will be v5; previous versions have been kept for posterity and will be useful to explain the evolution of this process.
 
 ## Processing V5
 
